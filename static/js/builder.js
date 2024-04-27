@@ -98,6 +98,8 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 				
 				//console.log(points_array)
 				//console.log(lines_array)
+
+				console.log('detect')
 			}
 		}
 	};
@@ -181,6 +183,10 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 			lines_array_[1].ValCombination = { value: [points_array_[0].ValCombination, points_array_[1].ValCombination] } // устанавливаем для линии точки соответствия(к кому она прикреплена)
 			
 			/// test segment ///
+			createSphere(lines_array_[0].metadata.pointsPos[1], redMaterial_)
+			createSphere(lines_array_[0].metadata.pointsPos[0], redMaterial_)
+			createSphere(lines_array_[1].metadata.pointsPos[1], redMaterial_)
+			createSphere(lines_array_[1].metadata.pointsPos[0], redMaterial_)
 			//console.log(points_array)
 			//console.log(lines_array_)
 
@@ -264,36 +270,25 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 		)
 		position = new BABYLON.Vector3(interP.x, 0, interP.z)
 		lines_array_[2].metadata.pointsPos[1] = position //обновление метадаты на точку пересечения для одной линии
+		lines_array_[0].metadata.pointsPos[1] = position
 		posOx = interP.x, posOz = interP.z
-		createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
+		//createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
 
 		/// test segment ///
-		//console.log(lines_array_[2].metadata.pointsPos[0])
-
-		//lines_array_[2].metadata.pointsPos[1] = position
-		//createSphere(lines_array_[2].metadata.pointsPos[1], redMaterial_)
-
-		//LinePointsO_arr[1] = position
-		//if(points_counter == 3){
-		//	center_point_x = (position.x + lines_array_[0].metadata.pointsPos[0].x) / 2;
-		//	center_point_z = (position.z + lines_array_[0].metadata.pointsPos[0].z) / 2;
-		//}else if(points_counter >= 4){
-		//	center_point_x = (position.x + lines_array_[0].metadata.pointsPos[1].x) / 2;
-		//	center_point_z = (position.z + lines_array_[0].metadata.pointsPos[1].z) / 2;
-		//}
-		//
-		//middleVector = new BABYLON.Vector3(center_point_x, 0, center_point_z)
-		//
-		//createSphere(middleVector, redMaterial_)
+		createSphere(lines_array_[2].metadata.pointsPos[1], redMaterial_)
+		//createSphere(lines_array_[0].metadata.pointsPos[1], redMaterial_)
+		createSphere(lines_array_[2].metadata.pointsPos[0], redMaterial_)
 
 		setIntersection(
 			endPoints[1].x, endPoints[1].z, lines_array_[1].metadata.middlePos.x, lines_array_[1].metadata.middlePos.z,
 			endPoints[2].x, endPoints[2].z, lines_array_[3].metadata.middlePos.x, lines_array_[3].metadata.middlePos.z,
 		)
 		position = new BABYLON.Vector3(interP.x, 0, interP.z)
-		lines_array_[3].metadata.pointsPos[1] = position //обновление метадаты на точку пересечения для другой линии
+		//обновление метадаты на точку пересечения для другой линии
+		lines_array_[3].metadata.pointsPos[1] = position 
+		lines_array_[1].metadata.pointsPos[1] = position
 		posTx = interP.x, posTz = interP.z
-		createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
+		//createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
 
 		// присваиваем перпендикуляры к точке в качестве аттрибутов
 		points_array_[1].PointPositionWC = { attachedPoints: { id: [points_array_[1].id], xO: posOx, zO: posOz, xT: posTx, zT: posTz } };
@@ -307,19 +302,10 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 		});
 
 		/// test segment ///
-		//console.log(points_array)
-		//console.log(lines_array_[0].metadata.pointsPos[0])
-		//createSphere(LinePointsO_arr[1], redMaterial_)
-		//createSphere(lines_array_[3].metadata.pointsPos[1], redMaterial_) 
-		
-		//createSphere(lines_array_[2].metadata.pointsPos[1], redMaterial_)
-		//createSphere(lines_array_[1].metadata.pointsPos[1], redMaterial_)
-		
-		//if(points_counter == 3){
-		//	createSphere(lines_array_[0].metadata.pointsPos[0], redMaterial_)
-		//}else if(points_counter >= 4){
-		//	createSphere(lines_array_[0].metadata.pointsPos[1], redMaterial_)
-		//}
+		createSphere(lines_array_[3].metadata.pointsPos[1], redMaterial_) 
+		//createSphere(lines_array_[1].metadata.pointsPos[1], redMaterial_) 
+		createSphere(lines_array_[3].metadata.pointsPos[0], redMaterial_) 
+
 	}
 	// функция для вычисления перпендикуляра
 	function calculateNormal(VecO, VecT){

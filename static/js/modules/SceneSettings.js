@@ -12,7 +12,7 @@ export function ExportSceneSettings(canvas_, engine_, scene_, camera_, light_, p
 	plane_material_.backFaceCulling = false;
 	plane_.material = plane_material_;
 	// Создание 2D камеры вида сверху
-	camera_ = new BABYLON.ArcRotateCamera("camera", 0.8, 0.8, 10, BABYLON.Vector3.Zero(), scene_);
+	camera_ = new BABYLON.ArcRotateCamera("camera", 13, 0.5, 10, BABYLON.Vector3.Zero(), scene_);
     camera_.setTarget(BABYLON.Vector3.Zero());
     camera_.attachControl(canvas_, true);
     camera_.minZ = -100
@@ -21,9 +21,9 @@ export function ExportSceneSettings(canvas_, engine_, scene_, camera_, light_, p
 
     // ORTHO setup
 
-    camera_.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA
-    camera_.orthoLeft = -10
-    camera_.orthoRight = 10
+    //camera_.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA
+    //camera_.orthoLeft = -10
+    //camera_.orthoRight = 10
 
 	const setOrthoCameraTopBottom = (camera, ratio) => {
 		camera.orthoTop = camera.orthoRight * ratio
