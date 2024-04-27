@@ -15,6 +15,7 @@ let lines_array_ = []; // массив для хранения последни�
 var ValueValidatorSphere; // валидатор сферы перед добавлением её в массив клика(не перпендикуляра)
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; // переменная для генерации рандомного ID состоящего из 16 символов
 var SphereUniqueId = ''; // уникальный ID для каждой сферы
+var ValidatorComplited = false;
 
 var createScene = function() {
 	
@@ -66,7 +67,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 	let endPoints = []; // массив точек для создания пересечений
 	var c2x, c3x, c2z, c3z, d, u1, u4, px, pz, p, p1I, p2I, p3I, p4I; // переменные функции нахождения персечений
 	var interP; // точка пересечения
-	var ValidatorComplited = false;
+	
 
 	// Создание onPointerDown для всей сцены и если находим точку с BegEnd === 'start', то делаем функцию завершения построения стены
 	scene_.onPointerDown = function (event, pickResult) {
@@ -78,7 +79,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 				for(let i = 0; i<lines_array.length; i++){
 					for(let j = 0; j < lines_array[i].ValCombination.value.length; j++){
 						if(lines_array[i].ValCombination.value[j].combination == 1){
-							console.log(lines_array[i])
+							//console.log(lines_array[i])
 						}
 					}
 				}
@@ -94,8 +95,9 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 				createSphere(position, redMaterial_)
 				
 				creating();
-
-				console.log(lines_array)
+				
+				//console.log(points_array)
+				//console.log(lines_array)
 			}
 		}
 	};
@@ -106,6 +108,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 	planeActionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function (evt) {
 
 		points_counter += 1;
+		console.log(points_counter)
 
 		// Получаем координаты нажатия
 		pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY);
@@ -187,6 +190,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 		}
 	}));
 	function creating(){
+
 		ValueValidatorSphere = 'Side' // обозначаем, что далее идут points со значением side, которые не добавляются в массивы points_array и points_array_
 		LinePointsO_arr = []; // обнуление точек перпендикуляров
 		LinePointsT_arr = []; // обнуление точек перпендикуляров
@@ -210,7 +214,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 		//запускаем проверку массива points_array на поиск элемента с ID как у points_array_[2] и если мы его находит - то присваиваем к element значение аттрибута PointPositionWC 
 		points_array.forEach(function(element) { 
 			if (element.id === points_array_[2].id) { 
-				 element.PointPositionWC = { attachedPoints: { id: [points_array_[2].id], xO: posOx, zO: posOz, xT: posTx, zT: posTz } }; 
+				element.PointPositionWC = { attachedPoints: { id: [points_array_[2].id], xO: posOx, zO: posOz, xT: posTx, zT: posTz } }; 
 				element.BegEnd =  'end'; 
 			} 
 		});
@@ -259,14 +263,35 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 			endPoints[3].x, endPoints[3].z, lines_array_[2].metadata.middlePos.x, lines_array_[2].metadata.middlePos.z,
 		)
 		position = new BABYLON.Vector3(interP.x, 0, interP.z)
+		lines_array_[2].metadata.pointsPos[1] = position //обновление метадаты на точку пересечения для одной линии
 		posOx = interP.x, posOz = interP.z
 		createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
+
+		/// test segment ///
+		//console.log(lines_array_[2].metadata.pointsPos[0])
+
+		//lines_array_[2].metadata.pointsPos[1] = position
+		//createSphere(lines_array_[2].metadata.pointsPos[1], redMaterial_)
+
+		//LinePointsO_arr[1] = position
+		//if(points_counter == 3){
+		//	center_point_x = (position.x + lines_array_[0].metadata.pointsPos[0].x) / 2;
+		//	center_point_z = (position.z + lines_array_[0].metadata.pointsPos[0].z) / 2;
+		//}else if(points_counter >= 4){
+		//	center_point_x = (position.x + lines_array_[0].metadata.pointsPos[1].x) / 2;
+		//	center_point_z = (position.z + lines_array_[0].metadata.pointsPos[1].z) / 2;
+		//}
+		//
+		//middleVector = new BABYLON.Vector3(center_point_x, 0, center_point_z)
+		//
+		//createSphere(middleVector, redMaterial_)
 
 		setIntersection(
 			endPoints[1].x, endPoints[1].z, lines_array_[1].metadata.middlePos.x, lines_array_[1].metadata.middlePos.z,
 			endPoints[2].x, endPoints[2].z, lines_array_[3].metadata.middlePos.x, lines_array_[3].metadata.middlePos.z,
 		)
 		position = new BABYLON.Vector3(interP.x, 0, interP.z)
+		lines_array_[3].metadata.pointsPos[1] = position //обновление метадаты на точку пересечения для другой линии
 		posTx = interP.x, posTz = interP.z
 		createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
 
@@ -276,14 +301,25 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 		points_array_[1].BegEnd = 'middle'
 		points_array.forEach(function(element) { 
 			if (element.id === points_array_[1].id) { 
-				 element.PointPositionWC = { attachedPoints: { id: [points_array_[1].id], xO: posOx, zO: posOz, xT: posTx, zT: posTz } }; 
+				element.PointPositionWC = { attachedPoints: { id: [points_array_[1].id], xO: posOx, zO: posOz, xT: posTx, zT: posTz } }; 
 				element.BegEnd = 'middle'
 			} 
 		});
 
 		/// test segment ///
 		//console.log(points_array)
-		//console.log(lines_array)
+		//console.log(lines_array_[0].metadata.pointsPos[0])
+		//createSphere(LinePointsO_arr[1], redMaterial_)
+		//createSphere(lines_array_[3].metadata.pointsPos[1], redMaterial_) 
+		
+		//createSphere(lines_array_[2].metadata.pointsPos[1], redMaterial_)
+		//createSphere(lines_array_[1].metadata.pointsPos[1], redMaterial_)
+		
+		//if(points_counter == 3){
+		//	createSphere(lines_array_[0].metadata.pointsPos[0], redMaterial_)
+		//}else if(points_counter >= 4){
+		//	createSphere(lines_array_[0].metadata.pointsPos[1], redMaterial_)
+		//}
 	}
 	// функция для вычисления перпендикуляра
 	function calculateNormal(VecO, VecT){
@@ -385,6 +421,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 }
 
 function createSphere(position_, material_){
+	
 	// Создание sphere в позиции нажатия
 	var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 32, diameter: 0.10 }, scene); //scene is 
 	sphere.material = material_ // присваиваем материал сфере
@@ -397,7 +434,6 @@ function createSphere(position_, material_){
 	};
 
 	if(ValueValidatorSphere == 'Main'){
-
 		// функция генерации уникального ID сфере
 		for (let i = 0; i < characters.length; i++) {
 			var randomIndex = Math.floor(Math.random() * characters.length);
