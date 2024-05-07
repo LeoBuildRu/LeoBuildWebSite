@@ -346,7 +346,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 			var test_arr = []
 			lines_array.forEach(function(element) { 
 				element.ValCombination.value.forEach(function(element_) { 
-					if(element_.combination == 1){
+					if(element_.combination == 1){ // создать получение значения ValCombination из клика по точке
 						//console.log(element_.combination)
 						test_arr.push(element)
 					}
@@ -356,10 +356,11 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 
 
 			// Перебираем массив с линиями и ищем пересечения
-			intersectedLineId = -1;
-			var intersection;
+			intersectedLineId = -1; // значение -1 присваевается в случае, если не было найдено ни одной пересекащей линии
+			var intersection; // установка значения false для intersection
 			var test_arr_ = []
 			for (var i = 0; i < newArray.length; i++) {
+				//если линия lines_array_[2] имеет пересечение с левой линией начальной/конечной точки
 				intersection = newArray[0].intersectsMesh(lines_array_[2], false);
 				if (intersection) {
 					console.log('detect 1')
@@ -367,6 +368,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 					test_arr_.push(newArray[0])
 					break;
 				}
+				//если линия lines_array_[2] имеет пересечение с правой линией начальной/конечной точки
 				intersection = newArray[1].intersectsMesh(lines_array_[2], false);
 				if (intersection) {
 					console.log('detect 2')
@@ -374,6 +376,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 					test_arr_.push(newArray[1])
 					break;
 				}
+				//если линия lines_array_[3] имеет пересечение с левой линией начальной/конечной точки
 				intersection = newArray[0].intersectsMesh(lines_array_[3], false);
 				if (intersection) {
 					console.log('detect 3')
@@ -381,6 +384,7 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 					test_arr_.push(newArray[1])
 					break;
 				}
+				//если линия lines_array_[3] имеет пересечение с правой линией начальной/конечной точки
 				intersection = newArray[1].intersectsMesh(lines_array_[3], false);
 				if (intersection) {
 					console.log('detect 4')
@@ -389,6 +393,8 @@ function createWalls(scene_, plane_, redMaterial_, blueMaterial_){
 					break;
 				}
 			}
+			// т.к. newArray содержит 2 линии, а одну из линий мы уже нашли 
+			// - находит вторую линию посредством удаления схожего элемента из массива newArray, после чего результат выводим в newArray_, после чего используем как: "newArray_[0]"
 			let newArray_ = removeDuplicates(newArray, test_arr_);
 			console.log(test_arr_)
 			console.log(newArray_)
