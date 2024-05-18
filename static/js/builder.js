@@ -47,7 +47,7 @@ let points_array = []; // массив для позиций точек в фо�
 let points_array_ = []; // массив для хранения последних трёх позиций точек в формате вектор3
 var posOx, posOz, posTx, posTz; // posOx и posOz - первая точка для выстраивания вектора | posTx и posTz - вторая точка для выстраивания вектора
 var dx, dz, len, udx, udz, nx, nz; // значения calculateNormal для выстраивания перпендикуляра
-var R = 0.7; // ширина стены
+var R = 0.4; // ширина стены
 var pointO, pointT // точки для построения линии
 var line; // линия, для нахождения пересечений
 var pointsLI; // массив для заточения в него точек для последующего создания линии
@@ -255,16 +255,19 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 
 				updateDataLines(lines_array_[2].metadata.pointsPos, lines_array_[3].metadata.pointsPos)
 
+				//-------------- TEST SEGMENT --------------//
+				
 				// Создаем куб
 				var points = [
-					new BABYLON.Vector3(-1, -1, -1),
-					new BABYLON.Vector3(1, -1, -1),
-					new BABYLON.Vector3(-1, 1, -1),
-					new BABYLON.Vector3(1, 1, -1),
-					new BABYLON.Vector3(-1, -1, 1),
-					new BABYLON.Vector3(1, -1, 1),
-					new BABYLON.Vector3(-1, 1, 1),
-					new BABYLON.Vector3(1, 1, 1)
+					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[0].x, 0, lines_array[0].metadata.pointsPos[0].z),
+					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[0].x, 0, lines_array[1].metadata.pointsPos[0].z),
+					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[0].x, 1, lines_array[0].metadata.pointsPos[0].z),
+					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[0].x, 1, lines_array[1].metadata.pointsPos[0].z),
+
+					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[1].x, 0, lines_array[0].metadata.pointsPos[1].z),
+					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[1].x, 0, lines_array[1].metadata.pointsPos[1].z),
+					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[1].x, 1, lines_array[0].metadata.pointsPos[1].z),
+					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[1].x, 1, lines_array[1].metadata.pointsPos[1].z),
 				];
 
 				var vertexData = new BABYLON.VertexData();
@@ -275,11 +278,23 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 					vertexData.positions.push(points[i].x, points[i].y, points[i].z);
 				}
 
-				// Оставляем только верхнюю и нижнюю стороны куба
-				vertexData.indices.push(0, 1, 2, 1, 3, 2); // Нижняя сторона
-				vertexData.indices.push(4, 6, 5, 5, 6, 7); // Верхняя сторона
+				// задняя сторона
+				vertexData.indices.push(0, 1, 2, 1, 2, 3);
+				// верхняя сторона
+				vertexData.indices.push(2, 3, 6, 3, 6, 7);
+				// передняя сторона
+				vertexData.indices.push(4, 5, 6, 5, 6, 7);
+				// нижняя сторона
+				vertexData.indices.push(0, 1, 4, 1, 4, 5);
 
-				vertexData.applyToMesh(createCube("cube", scene_));
+
+				var cube = createCube("cube", scene_);
+				var mesh = new BABYLON.Mesh(name, scene_);
+				vertexData.applyToMesh(mesh);
+
+				var material = new BABYLON.StandardMaterial("material", scene_);
+				material.backFaceCulling = false; // Делаем материал двусторонним
+				mesh.material = material;
 
 				function createCube(name, scene_) {
 					var cube = new BABYLON.Mesh(name, scene_);
@@ -288,9 +303,6 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 			}
 		}
 	}
-	
-	
-
 }
 
 function createSphere(position_, material_){
