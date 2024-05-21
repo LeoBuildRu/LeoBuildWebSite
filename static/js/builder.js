@@ -25,22 +25,24 @@ var createScene = function() {
 	// создание материала для присвоения ему импортного значения и дальнейшего использования
 	var redMaterial = new BABYLON.StandardMaterial("ground", scene); 
 	var blueMaterial = new BABYLON.StandardMaterial("ground", scene);
+	var doubleFaceMaterial = new BABYLON.StandardMaterial("material", scene);
 
 	//импорт настроек материалов из MaterialSettings.js
-	const MaterialArguments = ExportMaterialSettings(scene, redMaterial, blueMaterial); 
+	const MaterialArguments = ExportMaterialSettings(scene, redMaterial, blueMaterial, doubleFaceMaterial); 
 
 	// присвоение материалу его импортного значения
 	redMaterial = MaterialArguments.redMaterial 
 	blueMaterial = MaterialArguments.blueMaterial 
+	doubleFaceMaterial = MaterialArguments.doubleFaceMaterial 
 
-	builder(scene, plane, redMaterial, blueMaterial)
+	builder(scene, plane, redMaterial, blueMaterial, doubleFaceMaterial)
 
   	return scene;
 };
 
 //-------------- ОБЪЯВЛЕНИЕ ПЕРЕМЕННЫХ --------------//
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; // переменная для генерации рандомного ID состоящего из 16 символов
-var SphereUniqueId = ''; // уникальный ID для каждой сферы
+var MeshUniqueId = ''; // уникальный ID для каждой сферы
 var points_counter = 0; // обозначает сколько кликов для создания стен было сделано
 var pickInfo, position; // координаты нажатия 
 let points_array = []; // массив для позиций точек в формате вектор3
@@ -60,14 +62,34 @@ var farthestPoint, farthestDistanceSquared, referencePoint, distanceSquared // �
 let endPoints = []; // массив точек для создания пересечений
 var c2x, c3x, c2z, c3z, d, u1, u4, px, pz, p, p1I, p2I, p3I, p4I; // переменные функции нахождения персечений
 var interP; // точка пересечения
+var TargetLine; // Переменная обозначающая, которая линия пересекается первой
+let intersectedLines = []; // массив всех линий с одним ValCombination
+let intersectedLines_ = []; // массив всех линий с одним ValCombination за исключением ново-созданных
+let TargetintersectedLine = []; 
+let AnotherIntersectedLine = [];
+var intersectedLineId;
+var intersectionValidator;
+let WallPoints = [];
+let WallVertexData = [];
+let WallMesh_array = [];
+let WallMesh_array_ = [];
+var globalStart = new BABYLON.Vector3(0, 0, 0);
+var globalEnd = new BABYLON.Vector3(-1, 0, 0);
+var pointStart;
+var pointEnd;
+var diffVector, distance;
+var vectorO,vectorT, dotProduct, angle, crossProduct, sign, degrees, fullAngle;
+let SideWallMesh_array = [];
+let SideWallMesh_array_ = [];
 
 
 //-------------- TEST SEGMENT --------------//
 var PointValidator = 'MAIN'
 var SphereValidator = 'BUILDING'
 var CompletionValidator = false
+var materialMESH;
 
-function builder(scene_, plane_, redMaterial_, blueMaterial_){
+function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
 
 	// Создание onPointerDown для всей сцены и если находим точку с BegEnd === 'start', то делаем функцию завершения построения стены
 	scene_.onPointerDown = function (event, pickResult) {
@@ -114,17 +136,25 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 	}));
 
 	function creating(val1, val2){
-
 		if(points_counter >=4){
 			endPoints = []; // обнуление самых дальних точек линий(EndPoints)
 			points_array_.shift(); // удаление из массива первой точки, чтобы соблюдать технологию, при которой идёт смещение: 1 - 2 - 3; 1 - 2 - 3 - 4; (удаление первого) 2 - 3 - 4;
 			lines_array_.shift(); // аналогичная ситуация как с points_array_ но уже для линий по бокам
 			lines_array_.shift();
+			WallMesh_array_.shift();
+			SideWallMesh_array_.shift();
+			SideWallMesh_array_.shift();
 		}
 
 		if(points_counter >=3){
 			LinePointsO_arr = []; // обнуление точек перпендикуляров
 			LinePointsT_arr = []; // обнуление точек перпендикуляров
+			WallMesh_array_[0].dispose();
+			WallMesh_array_.shift();
+			SideWallMesh_array_[0].dispose();
+			SideWallMesh_array_[1].dispose();
+			SideWallMesh_array_.shift();
+			SideWallMesh_array_.shift();
 		}
 
 		PointValidator = 'SIDE';
@@ -168,6 +198,14 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 			//запускаем проверку массива points_array на поиск элемента с ID как у points_array_[1] и если мы его находит - то присваиваем к element значение аттрибута PointPositionWC 
 			updatePointsData('start', 0)
 			updatePointsData('end', 1)
+
+			createWall(0, 1);
+
+			lines_array_[0].IdentifierWall = WallMesh_array_[0].id
+			lines_array_[1].IdentifierWall = WallMesh_array_[0].id
+
+			createSideWall(0)
+			createSideWall(1)
 		}
 
 		if(points_counter >= 3){
@@ -185,59 +223,66 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 			updatePointsData('end', 2)
 
 			updateDataLines(LinePointsO_arr, LinePointsT_arr)
+
+			createWall(0, 1);
+			createSideWall(0)
+			createSideWall(1)
+			if(CompletionValidator != true){
+				createWall(2, 3);
+				createSideWall(2)
+				createSideWall(3)
+			}
+
+			updateIdentifierDataLines(0);
+
+			//удаление из массива старых мешей стен, в качестве улучшения работоспособности кода
+			WallMesh_array.splice((points_counter-3), 1);
 			
 			if(CompletionValidator == true){
-				var test_arr = []
+
+				intersectedLines = []
+				//Функция перебора всех линий, с таким же ValCombination, как и у нажатой точки
 				lines_array.forEach(function(element) { 
 					element.ValCombination.value.forEach(function(element_) { 
 						if(element_.combination == 1){
-							//console.log(element_.combination)
-							test_arr.push(element)
+							intersectedLines.push(element)
 						}
 					});
 				});
-				let newArray = removeDuplicates(test_arr, lines_array_);
-
+				//Удаляем из массива линии, которые только что были созданы и оставляем все остальные
+				intersectedLines_ = removeDuplicates(intersectedLines, lines_array_);
 
 				// Перебираем массив с линиями и ищем пересечения
-				var intersectedLineId = -1;
-				var intersection;
-				var test_arr_ = []
-				var testValidator;
-				for (var i = 0; i < newArray.length; i++) {
-					intersection = newArray[0].intersectsMesh(lines_array_[2], false);
-					if (intersection) {
-						console.log('detect 1')
-						testValidator = 'detect 1'
-						intersectedLineId = newArray[0];
-						test_arr_.push(newArray[0])
-						break;
-					}
-					intersection = newArray[1].intersectsMesh(lines_array_[3], false);
-					if (intersection) {
-						console.log('detect 4')
-						testValidator = 'detect 4'
-						intersectedLineId = newArray[1];
-						test_arr_.push(newArray[1])
+				intersectedLineId = -1;
+				TargetintersectedLine = []
+
+				for (var i = 0; i < intersectedLines_.length; i++) {
+					intersectionValidator = intersectedLines_[i].intersectsMesh(lines_array_[i+2], false);
+					if (intersectionValidator) {
+						TargetLine = 'detect ' + (i+1);
+						intersectedLineId = intersectedLines_[i];
+						TargetintersectedLine.push(intersectedLines_[i])
 						break;
 					}
 				}
-				let newArray_ = removeDuplicates(newArray, test_arr_);
 
-				// Выводим ID пересекающейся линии
-				if (intersectedLineId !== -1) {
-					console.log("Первая пересекающаяся линия найдена. ID: " + intersectedLineId.id);
-				} else {
-					console.log("Линия не найдена");
-				}
+				AnotherIntersectedLine = removeDuplicates(intersectedLines_, TargetintersectedLine);
 
-				removeItemFromArray(newArray_, intersectedLineId)
+				removeItemFromArray(AnotherIntersectedLine, intersectedLineId)
 
-				if(testValidator == 'detect 1'){
+				//функция удаления старого меша на месте завершающего клика
+				WallMesh_array.forEach(item => {
+					if (item.id === intersectedLineId.IdentifierWall) {
+						item.dispose();
+						removeItemFromArray(WallMesh_array, item)
+					}
+				});
+				
+				if(TargetLine == 'detect 1'){
 					lines_array_.push(intersectedLineId)
-					lines_array_.push(newArray_[0])
-				}else if(testValidator == 'detect 4'){
-					lines_array_.push(newArray_[0])
+					lines_array_.push(AnotherIntersectedLine[0])
+				}else if(TargetLine == 'detect 2'){
+					lines_array_.push(AnotherIntersectedLine[0])
 					lines_array_.push(intersectedLineId)
 				}
 
@@ -254,61 +299,132 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_){
 				setIntersection();
 
 				updateDataLines(lines_array_[2].metadata.pointsPos, lines_array_[3].metadata.pointsPos)
+				createWall(0, 1);
+				createWall(2, 3);
 
-				//-------------- TEST SEGMENT --------------//
-				
-				// Создаем куб
-				var points = [
-					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[0].x, 0, lines_array[0].metadata.pointsPos[0].z),
-					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[0].x, 0, lines_array[1].metadata.pointsPos[0].z),
-					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[0].x, 1, lines_array[0].metadata.pointsPos[0].z),
-					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[0].x, 1, lines_array[1].metadata.pointsPos[0].z),
+				createSideWall(0)
+				createSideWall(1)
+				createSideWall(2)
+				createSideWall(3)
 
-					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[1].x, 0, lines_array[0].metadata.pointsPos[1].z),
-					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[1].x, 0, lines_array[1].metadata.pointsPos[1].z),
-					new BABYLON.Vector3(lines_array[0].metadata.pointsPos[1].x, 1, lines_array[0].metadata.pointsPos[1].z),
-					new BABYLON.Vector3(lines_array[1].metadata.pointsPos[1].x, 1, lines_array[1].metadata.pointsPos[1].z),
-				];
-
-				var vertexData = new BABYLON.VertexData();
-				vertexData.positions = [];
-				vertexData.indices = [];
-
-				for (var i = 0; i < points.length; i++) {
-					vertexData.positions.push(points[i].x, points[i].y, points[i].z);
-				}
-
-				// задняя сторона
-				vertexData.indices.push(0, 1, 2, 1, 2, 3);
-				// верхняя сторона
-				vertexData.indices.push(2, 3, 6, 3, 6, 7);
-				// передняя сторона
-				vertexData.indices.push(4, 5, 6, 5, 6, 7);
-				// нижняя сторона
-				vertexData.indices.push(0, 1, 4, 1, 4, 5);
-
-
-				var cube = createCube("cube", scene_);
-				var mesh = new BABYLON.Mesh(name, scene_);
-				vertexData.applyToMesh(mesh);
-
-				var material = new BABYLON.StandardMaterial("material", scene_);
-				material.backFaceCulling = false; // Делаем материал двусторонним
-				mesh.material = material;
-
-				function createCube(name, scene_) {
-					var cube = new BABYLON.Mesh(name, scene_);
-					return cube;
-				}
+				updateIdentifierDataLines(1);
 			}
 		}
 	}
+
+	function createWall(val1, val2){
+
+		MeshUniqueId = 0;
+			
+		// Создаем куб
+		WallPoints = [
+			new BABYLON.Vector3(lines_array_[val1].metadata.pointsPos[0].x, 0, lines_array_[val1].metadata.pointsPos[0].z),
+			new BABYLON.Vector3(lines_array_[val2].metadata.pointsPos[0].x, 0, lines_array_[val2].metadata.pointsPos[0].z),
+			new BABYLON.Vector3(lines_array_[val1].metadata.pointsPos[0].x, 1, lines_array_[val1].metadata.pointsPos[0].z),
+			new BABYLON.Vector3(lines_array_[val2].metadata.pointsPos[0].x, 1, lines_array_[val2].metadata.pointsPos[0].z),
+	
+			new BABYLON.Vector3(lines_array_[val1].metadata.pointsPos[1].x, 0, lines_array_[val1].metadata.pointsPos[1].z),
+			new BABYLON.Vector3(lines_array_[val2].metadata.pointsPos[1].x, 0, lines_array_[val2].metadata.pointsPos[1].z),
+			new BABYLON.Vector3(lines_array_[val1].metadata.pointsPos[1].x, 1, lines_array_[val1].metadata.pointsPos[1].z),
+			new BABYLON.Vector3(lines_array_[val2].metadata.pointsPos[1].x, 1, lines_array_[val2].metadata.pointsPos[1].z),
+		];
+	
+		WallVertexData = new BABYLON.VertexData();
+		WallVertexData.positions = [];
+		WallVertexData.indices = [];
+	
+		for (var i = 0; i < WallPoints.length; i++) {
+			WallVertexData.positions.push(WallPoints[i].x, WallPoints[i].y, WallPoints[i].z);
+		}
+	
+		// задняя сторона
+		WallVertexData.indices.push(0, 1, 2, 1, 2, 3);
+		// верхняя сторона
+		WallVertexData.indices.push(2, 3, 6, 3, 6, 7);
+		// передняя сторона
+		WallVertexData.indices.push(4, 5, 6, 5, 6, 7);
+		// нижняя сторона
+		WallVertexData.indices.push(0, 1, 4, 1, 4, 5);
+	
+		var mesh = new BABYLON.Mesh("cube", scene_);
+		WallVertexData.applyToMesh(mesh);
+
+		materialMESH = new BABYLON.StandardMaterial("material", scene_);
+		materialMESH.diffuseColor = generateRandomColor();
+
+		mesh.material = materialMESH;
+
+        // Делаем материал двусторонним
+        mesh.material.backFaceCulling = false;
+
+		// функция генерации уникального ID сфере
+		for (let i = 0; i < characters.length; i++) {
+			var randomIndex = Math.floor(Math.random() * characters.length);
+			MeshUniqueId += characters.charAt(randomIndex);
+		}
+
+		mesh.id = MeshUniqueId; // присваиваем ID сфере
+
+		WallMesh_array.push(mesh);
+		WallMesh_array_.push(mesh);
+	}
+
+	function createSideWall(val1){
+
+		MeshUniqueId = 0;
+
+		// Создаем две точки
+		pointStart = new BABYLON.Vector3(lines_array_[val1].metadata.pointsPos[0].x, 0, lines_array_[val1].metadata.pointsPos[0].z);
+		pointEnd = new BABYLON.Vector3(lines_array_[val1].metadata.pointsPos[1].x, 0, lines_array_[val1].metadata.pointsPos[1].z);
+
+		// Вычисляем разницу между точками
+		diffVector = pointEnd.subtract(pointStart);
+
+		// Вычисляем длину вектора разницы (это и будет расстояние между точками)
+		distance = diffVector.length();
+
+		var SideWall = BABYLON.MeshBuilder.CreateGround("ground", {width: distance, height: 1}, scene_);
+
+		position = new BABYLON.Vector3(lines_array_[val1].metadata.middlePos.x, 0.5, lines_array_[val1].metadata.middlePos.z);
+		SideWall.position = position;
+		SideWall.rotation.x = Math.PI/2;
+
+		materialMESH = new BABYLON.StandardMaterial("material", scene_);
+		materialMESH.diffuseColor = generateRandomColor();
+
+		SideWall.material = materialMESH;
+
+		// Делаем материал двусторонним
+		SideWall.material.backFaceCulling = false;
+
+		getAngleVectors(pointStart, pointEnd, globalStart, globalEnd);
+
+		if(fullAngle > 180){
+			SideWall.rotation.y = angle;
+		}else if(fullAngle < 180){
+			SideWall.rotation.y = -angle;
+		}
+
+		// функция генерации уникального ID сфере
+		for (let i = 0; i < characters.length; i++) {
+			var randomIndex = Math.floor(Math.random() * characters.length);
+			MeshUniqueId += characters.charAt(randomIndex);
+		}
+
+		SideWall.id = MeshUniqueId
+
+		SideWallMesh_array.push(SideWall)
+		SideWallMesh_array_.push(SideWall)
+
+	}
+
 }
 
 function createSphere(position_, material_){
 	
 	// Создание sphere в позиции нажатия
 	var sphere;
+	MeshUniqueId = 0;
 	if(SphereValidator != 'ENDING'){
 		sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 32, diameter: 0.10 }, scene); //scene is 
 		sphere.material = material_ // присваиваем материал сфере
@@ -319,10 +435,10 @@ function createSphere(position_, material_){
 		// функция генерации уникального ID сфере
 		for (let i = 0; i < characters.length; i++) {
 			var randomIndex = Math.floor(Math.random() * characters.length);
-			SphereUniqueId += characters.charAt(randomIndex);
+			MeshUniqueId += characters.charAt(randomIndex);
 		}
 
-		sphere.id = SphereUniqueId; // присваиваем ID сфере
+		sphere.id = MeshUniqueId; // присваиваем ID сфере
 		sphere.ValCombination = { combination: points_counter };
 
 		points_array.push(sphere) // пуш в массив всех points
@@ -360,13 +476,14 @@ function createLine(posOSx, posOSz, posTSx, posTSz){
 		pointO, 
 		pointT, 
 	];
+	MeshUniqueId = 0;
 	line = BABYLON.MeshBuilder.CreateLines("lines", { points: pointsLI });
 	// функция генерации уникального ID линиям
 	for (let i = 0; i < characters.length; i++) {
 		var randomIndex = Math.floor(Math.random() * characters.length);
-		SphereUniqueId += characters.charAt(randomIndex);
+		MeshUniqueId += characters.charAt(randomIndex);
 	}
-	line.id = SphereUniqueId;
+	line.id = MeshUniqueId;
 	lines_array.push(line)
 	lines_array_.push(line)
 }
@@ -506,6 +623,60 @@ function updateDataLines(val1, val2){
 	});
 }
 
+function updateIdentifierDataLines(val1){
+	lines_array_[0].IdentifierWall = WallMesh_array_[val1].id
+	lines_array_[1].IdentifierWall = WallMesh_array_[val1].id
+
+	lines_array.forEach(function(element) { 
+		if (element.id === lines_array_[0].id) { 
+			element.IdentifierWall = WallMesh_array_[val1].id
+		} 
+		if (element.id === lines_array_[1].id) { 
+			element.IdentifierWall = WallMesh_array_[val1].id
+		} 
+	});
+}
+
+function updateSideWallDataLines(val1, val2){
+	lines_array_[0].IdentifierSideWall = SideWallMesh_array_[val1].id
+	lines_array_[1].IdentifierSideWall = SideWallMesh_array_[val2].id
+
+	lines_array.forEach(function(element) { 
+		if (element.id === lines_array_[0].id) { 
+
+		} 
+		if (element.id === lines_array_[1].id) { 
+
+		} 
+	});
+}
+
+function getAngleVectors(val1, val2, val3, val4){
+	// Находим вектора для каждого отрезка
+	vectorO = val2.subtract(val1);
+	vectorT = val4.subtract(val3);
+
+	// Нормализуем вектора
+	vectorO = vectorO.normalize();
+	vectorT = vectorT.normalize();
+
+	// Вычисляем скалярное произведение нормализованных векторов
+	dotProduct = BABYLON.Vector3.Dot(vectorO, vectorT);
+
+	// Находим угол между векторами в радианах
+	angle = Math.acos(dotProduct);
+
+	// Находим знак угла с помощью векторного произведения
+	crossProduct = BABYLON.Vector3.Cross(vectorO, vectorT);
+	sign = BABYLON.Vector3.Dot(BABYLON.Vector3.Up(), crossProduct);
+
+	// Преобразуем результат в градусы и переводим его в необходимый диапазон
+	degrees = BABYLON.Tools.ToDegrees(angle);
+	fullAngle = sign >= 0 ? degrees : 360 - degrees;
+
+	//console.log("Угол между отрезками в диапазоне от 0 до 360 градусов: " + fullAngle);
+}
+
 //-------------- TEST SEGMENT --------------//
 
 //функция удаления переменных одного массива из другого
@@ -520,6 +691,14 @@ function removeItemFromArray(arr, item) {
         arr.splice(index, 1);
     }
     return arr;
+}
+
+function generateRandomColor() {
+	var red = Math.random();
+	var green = Math.random();
+	var blue = Math.random();
+	
+	return new BABYLON.Color3(red, green, blue);
 }
 
 var scene = createScene();
