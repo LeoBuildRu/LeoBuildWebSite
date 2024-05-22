@@ -235,10 +235,34 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 
 			updateIdentifierDataLines(0);
 
+			lines_array_[0].IdentifierSideWall = SideWallMesh_array_[0].id
+			lines_array_[1].IdentifierSideWall = SideWallMesh_array_[1].id
+
+			lines_array.forEach(function(element) { 
+				if (element.id === lines_array_[0].id) { 
+					element.IdentifierSideWall = SideWallMesh_array_[0].id
+				} 
+				if (element.id === lines_array_[1].id) { 
+					element.IdentifierSideWall = SideWallMesh_array_[1].id
+				} 
+			});
+
 			//удаление из массива старых мешей стен, в качестве улучшения работоспособности кода
 			WallMesh_array.splice((points_counter-3), 1);
+			if(CompletionValidator != true){
+				SideWallMesh_array.splice((SideWallMesh_array.length-6), 1);
+				SideWallMesh_array.splice((SideWallMesh_array.length-5), 1);
+			}
 			
+			//console.log(SideWallMesh_array)
+			//console.log(lines_array)
+
+
+
 			if(CompletionValidator == true){
+
+				//SideWallMesh_array[0].dispose();
+				//SideWallMesh_array[1].dispose();
 
 				intersectedLines = []
 				//Функция перебора всех линий, с таким же ValCombination, как и у нажатой точки
@@ -277,6 +301,20 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 						removeItemFromArray(WallMesh_array, item)
 					}
 				});
+
+				
+				//console.log(AnotherIntersectedLine[0])
+				SideWallMesh_array.forEach(item => {
+					if ((item.id === intersectedLineId.IdentifierSideWall) || (item.id === AnotherIntersectedLine[0].IdentifierSideWall)) {
+						console.log(`элемент ${item.id}`);
+						item.dispose();
+						//removeItemFromArray(SideWallMesh_array, item)
+					}
+				});
+
+				//console.log(lines_array)
+				//console.log(SideWallMesh_array)
+
 				
 				if(TargetLine == 'detect 1'){
 					lines_array_.push(intersectedLineId)
@@ -308,6 +346,8 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 				createSideWall(3)
 
 				updateIdentifierDataLines(1);
+
+				console.log(SideWallMesh_array)
 			}
 		}
 	}
