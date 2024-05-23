@@ -88,6 +88,8 @@ var PointValidator = 'MAIN'
 var SphereValidator = 'BUILDING'
 var CompletionValidator = false
 var materialMESH;
+var wallCounter = 0;
+let test_arr = [];
 
 function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
 
@@ -97,6 +99,7 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 			var mesh = pickResult.pickedMesh;
 			if (mesh && mesh.BegEnd === 'start') {
 				points_counter += 1;
+				wallCounter += 2;
 
 				// Получаем координаты нажатия
 				PointValidator = 'MAIN';
@@ -115,6 +118,7 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 	planeActionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function (evt) {
 
 		points_counter += 1; //увеличиваем количество кликов на 1
+		wallCounter += 2;
 
 		// Получаем координаты нажатия
 		pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY);
@@ -253,16 +257,11 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 				SideWallMesh_array.splice((SideWallMesh_array.length-6), 1);
 				SideWallMesh_array.splice((SideWallMesh_array.length-5), 1);
 			}
-			
-			//console.log(SideWallMesh_array)
-			//console.log(lines_array)
-
 
 
 			if(CompletionValidator == true){
 
-				//SideWallMesh_array[0].dispose();
-				//SideWallMesh_array[1].dispose();
+				//console.log(lines_array)
 
 				intersectedLines = []
 				//Функция перебора всех линий, с таким же ValCombination, как и у нажатой точки
@@ -306,14 +305,16 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 				//console.log(AnotherIntersectedLine[0])
 				SideWallMesh_array.forEach(item => {
 					if ((item.id === intersectedLineId.IdentifierSideWall) || (item.id === AnotherIntersectedLine[0].IdentifierSideWall)) {
-						console.log(`элемент ${item.id}`);
+						//console.log(`элемент ${item.id}`);
 						item.dispose();
+						test_arr.push(item)
 						//removeItemFromArray(SideWallMesh_array, item)
 					}
 				});
 
+				SideWallMesh_array = removeDuplicates(SideWallMesh_array, test_arr);
+
 				//console.log(lines_array)
-				//console.log(SideWallMesh_array)
 
 				
 				if(TargetLine == 'detect 1'){
@@ -342,12 +343,14 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 
 				createSideWall(0)
 				createSideWall(1)
+
+				SideWallMesh_array.splice((SideWallMesh_array.length-6), 1);
+				SideWallMesh_array.splice((SideWallMesh_array.length-5), 1);
+
 				createSideWall(2)
 				createSideWall(3)
 
 				updateIdentifierDataLines(1);
-
-				console.log(SideWallMesh_array)
 			}
 		}
 	}
