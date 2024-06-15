@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BabylonJS Rotating Cube</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
         margin: 0;
@@ -21,7 +22,7 @@
   </style>
 </head>
 <body class="scroller-ziro">
-
+    <button class="absolute left-0 top-0 w-36 h-12 mt-16 ml-8 bg-white text-center" id="CreateWall">CREATE WALL</button>
     <canvas id="renderCanvas"></canvas>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="{% static '/node_modules/babylonjs/babylon.js' %}"></script>

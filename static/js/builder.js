@@ -35,7 +35,7 @@ var createScene = function() {
 	blueMaterial = MaterialArguments.blueMaterial 
 	doubleFaceMaterial = MaterialArguments.doubleFaceMaterial 
 
-	builder(scene, plane, redMaterial, blueMaterial, doubleFaceMaterial)
+	builder(canvas, scene, camera, plane, redMaterial, blueMaterial, doubleFaceMaterial)
 
   	return scene;
 };
@@ -84,66 +84,90 @@ let SideWallMesh_array = [];
 let SideWallMesh_array_ = [];
 var targetValCombination;
 var targetMesh;
+var sprite;
+var spritePosition;
 
 
 
 //-------------- TEST SEGMENT --------------//
+var WallCreateValidator = false
 var PointValidator = 'MAIN'
 var SphereValidator = 'BUILDING'
 var CompletionValidator = false
 var materialMESH;
 let test_arr = [];
+document.getElementById('CreateWall').addEventListener('click', (e)=> {
+	WallCreateValidator = true
+});
 
-function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
+function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
 
 	// Создание onPointerDown для всей сцены и если находим точку с BegEnd === 'start', то делаем функцию завершения построения стены
-	scene_.onPointerDown = function (event, pickResult) {
-		if (pickResult.hit && pickResult.pickedMesh) {
-			var mesh = pickResult.pickedMesh;
-			if (mesh && mesh.BegEnd === 'start') {
-				targetMesh = mesh;
-				targetValCombination = mesh.ValCombination.combination;
-				click_counter += 1
-				points_counter += 1;
+	scene_.onPointerDown = function (event, pickResult, pickResult_) {
 
-				// Получаем координаты нажатия
-				PointValidator = 'MAIN';
-				SphereValidator = 'ENDING'
-				CompletionValidator = true
-				position = mesh._absolutePosition;
-				createSphere(position, redMaterial_)
-				
-				creating(1, 2);
+		pickResult = scene.pickSprite(this.pointerX, this.pointerY); // переводим pickResult в разряд чека спрайтов сцены
 
-				//console.log(mesh.position)
-			}
+		// проверяем, если спрайт действительно есть - запускаем процесс ресета настроек стен и удаления спрайта
+		// в противном случае присваиваем к переменной pickResult значение пика по мешу
+		if(pickResult && pickResult.pickedSprite && pickResult.pickedSprite.property == 'ENDING'){
+			resetWallSettings();
+
+			sprite.dispose()
 		}
+
+		if (pickResult && pickResult.pickedSprite && pickResult.pickedSprite.BegEnd === 'start' && WallCreateValidator == true) {
+			targetMesh = pickResult.pickedSprite; // присваиваем к переменной targetMesh значение кликнутого меша точки стены
+			targetValCombination = pickResult.pickedSprite.ValCombination.combination; // потсваиваем к переменной targetValCombination точки соответствия
+			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
+			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
+
+			// Получаем координаты нажатия
+			PointValidator = 'MAIN';
+			SphereValidator = 'ENDING'
+			CompletionValidator = true
+			position = pickResult.pickedSprite.position;
+			createPoint(position, redMaterial_)
+			
+			creating(1, 2);
+
+			sprite.dispose()
+		}
+		pickResult = 0;
 	};
 	
 	var planeActionManager = new BABYLON.ActionManager(scene_);
 	plane_.actionManager = planeActionManager;
 	planeActionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function (evt) {
+		if(WallCreateValidator == true){
+			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
+			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
-		click_counter += 1;
-		points_counter += 1; //увеличиваем количество кликов на 1
+			// Получаем координаты нажатия
+			pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY);
+			position = pickInfo.pickedPoint;
 
-		// Получаем координаты нажатия
-		pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY);
-		position = pickInfo.pickedPoint;
+			spritePosition = pickInfo.pickedPoint
 
-		PointValidator = 'MAIN';
-		createSphere(position, redMaterial_)
+			//отделил createSprite по той причине, что создание спрайта ендинга должно быть до создания базового спрайта стены, иначе базовый спрайт будет поверх ендинга
+			if(points_counter == 2){
+				createSprite("/static/img/check_mark.png", scene_);
+			}
 
-		if(points_counter == 2){
-			creating(0, 1);
+			PointValidator = 'MAIN';
+			createPoint(position, redMaterial_)
+
+			if(points_counter == 2){
+				creating(0, 1); 
+			}
+
+			if(points_counter >= 3){
+				creating(1, 2);
+			}
+
+			if(sprite && sprite.position){
+				sprite.position = spritePosition
+			}
 		}
-
-		if(points_counter >= 3){
-			creating(1, 2);
-
-			//console.log(points_array)
-		}
-
 	}));
 
 	function creating(val1, val2){
@@ -173,32 +197,32 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 		calculateNormal(points_array_[val1].position, points_array_[val2].position) // находим точки(перпендикуляры): posOx и posOz с одной стороны posTx и posTz с другой стороны
 		position = new BABYLON.Vector3(posOx, 0, posOz); // выставляем значение позиции на posOx и posOz
 		LinePointsO_arr.push(position) // пуш в массив для построения линии
-		//createSphere(position, redMaterial_)
+		//createPoint(position, redMaterial_)
 	
 		calculateNormal(points_array_[val2].position, points_array_[val1].position) // находим точки(перпендикуляры): posOx и posOz с одной стороны posTx и posTz с другой стороны
 		position = new BABYLON.Vector3(posTx, 0, posTz); // выставляем значение позиции на posOx и posOz
 		LinePointsO_arr.push(position) // пуш в массив для построения линии
-		//createSphere(position, redMaterial_)
+		//createPoint(position, redMaterial_)
 	
 		findMiddlePoint(points_array_[val1], points_array_[val2]) 
 		// находим точки(перпендикуляры): posOx и posOz с одной стороны posTx и posTz с другой стороны, но уже для центральной точки, между двумя основными
 		calculateNormal(middleVector, points_array_[val2].position)
 		position = new BABYLON.Vector3(posOx, 0, posOz); // выставляем значение позиции на posOx и posOz
 		middlePointO = position // серединная точка lines_array_[0]
-		//createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению posOx и posOz
+		//createPoint(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению posOx и posOz
 		position = new BABYLON.Vector3(posTx, 0, posTz); // выставляем значение позиции на posTx и posTz
 		middlePointT = position // серединная точка lines_array_[1]
-		//createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению posTx и posTz
+		//createPoint(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению posTx и posTz
 	
 		calculateNormal(points_array_[val1].position, points_array_[val2].position) // находим точки(перпендикуляры): posOx и posOz с одной стороны posTx и posTz с другой стороны
 		position = new BABYLON.Vector3(posTx, 0, posTz); // выставляем значение позиции на posOx и posOz
 		LinePointsT_arr.push(position) // пуш в массив первой точки lines_array_[1]
-		//createSphere(position, redMaterial_)
+		//createPoint(position, redMaterial_)
 	
 		calculateNormal(points_array_[val2].position, points_array_[val1].position) // находим точки(перпендикуляры): posOx и posOz с одной стороны posTx и posTz с другой стороны
 		position = new BABYLON.Vector3(posOx, 0, posOz); // выставляем значение позиции на posOx и posOz
 		LinePointsT_arr.push(position) // пуш в массив первой точки lines_array_[1]
-		//createSphere(position, redMaterial_)
+		//createPoint(position, redMaterial_)
 	
 		createLine(LinePointsO_arr[0].x, LinePointsO_arr[0].z, LinePointsO_arr[1].x, LinePointsO_arr[1].z) // создаём линию по первой и последней точке, беря данные из LinePointsO_arr и LinePointsT_arr
 		createLine(LinePointsT_arr[0].x, LinePointsT_arr[0].z, LinePointsT_arr[1].x, LinePointsT_arr[1].z) // создаём линию по первой и последней точке, беря данные из LinePointsO_arr и LinePointsT_arr
@@ -223,7 +247,7 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 			setDataLines(2, 3, 1, 2)
 
 			// Задаем точку, от которой будем искать самую дальнюю точку
-			referencePoint = points_array_[1]._absolutePosition;
+			referencePoint = points_array_[1].position;
 			
 			// Перебираем все точки и находим самую дальнюю
 			FindFarthestPoint();
@@ -259,8 +283,8 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 			});
 
 			//удаление из массива старых мешей стен, в качестве улучшения работоспособности кода
-			WallMesh_array.splice((WallMesh_array.length-3), 1);
 			if(CompletionValidator != true){
+				WallMesh_array.splice((WallMesh_array.length-3), 1);
 				SideWallMesh_array.splice((SideWallMesh_array.length-6), 1);
 				SideWallMesh_array.splice((SideWallMesh_array.length-5), 1);
 			}
@@ -333,7 +357,7 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 				lines_array_.shift();
 
 				// Задаем точку, от которой будем искать самую дальнюю точку
-				referencePoint = points_array_[2]._absolutePosition;
+				referencePoint = points_array_[2].position;
 				
 				// Перебираем все точки и находим самую дальнюю
 				FindFarthestPoint();
@@ -355,18 +379,7 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 
 				updateIdentifierDataLines(1);
 
-				/// TEST SEGMENT ///
-
-				points_counter = 0;
-				points_array_ = [];
-				lines_array_ = [];
-				WallMesh_array_ = [];
-				SideWallMesh_array_ = [];
-				LinePointsO_arr = []; 
-				LinePointsT_arr = []; 
-				endPoints = [];
-
-				CompletionValidator = false
+				resetWallSettings();
 			}
 		}
 	}
@@ -479,15 +492,21 @@ function builder(scene_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial
 
 }
 
-function createSphere(position_, material_){
+function createPoint(position_, material_){
 	
 	// Создание sphere в позиции нажатия
-	var sphere;
+	var spriteManager_;
+	var sprite_;
 	MeshUniqueId = 0;
 	if(SphereValidator != 'ENDING'){
-		sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 32, diameter: 0.10 }, scene); //scene is 
-		sphere.material = material_ // присваиваем материал сфере
-		sphere.position = position_; // присваиваем позицию сфере
+		spriteManager_ = new BABYLON.SpriteManager("spriteManager", "/static/img/red_point.png", 1, 512.5, scene);
+		spriteManager_.renderingGroupId = 1;
+		sprite_ = new BABYLON.Sprite("sprite", spriteManager_);
+		sprite_.size = 0.2;
+		sprite_.isPickable = true;
+		sprite_.position = position_
+		spriteManager_.isPickable = true;  
+		sprite_.property = 'BASE'
 	}
 
 	if(PointValidator == "MAIN" && SphereValidator != 'ENDING'){
@@ -497,11 +516,11 @@ function createSphere(position_, material_){
 			MeshUniqueId += characters.charAt(randomIndex);
 		}
 
-		sphere.id = MeshUniqueId; // присваиваем ID сфере
-		sphere.ValCombination = { combination: click_counter };
+		sprite_.id = MeshUniqueId; // присваиваем ID сфере
+		sprite_.ValCombination = { combination: click_counter };
 
-		points_array.push(sphere) // пуш в массив всех points
-		points_array_.push(sphere) // пуш в массив последних трёх points для вычисления перпендикуляров и пересечений
+		points_array.push(sprite_) // пуш в массив всех points
+		points_array_.push(sprite_) // пуш в массив последних трёх points для вычисления перпендикуляров и пересечений
 	}
 
 	if(SphereValidator == 'ENDING'){
@@ -625,7 +644,7 @@ function setIntersection(){
 	position = new BABYLON.Vector3(interP.x, 0, interP.z)
 	lines_array_[0].metadata.pointsPos[1] = position
 	lines_array_[2].metadata.pointsPos[0] = position
-	//createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
+	//createPoint(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
 
 	calculateIntersection(
 		endPoints[1].x, endPoints[1].z, lines_array_[1].metadata.middlePos.x, lines_array_[1].metadata.middlePos.z,
@@ -634,7 +653,7 @@ function setIntersection(){
 	position = new BABYLON.Vector3(interP.x, 0, interP.z)
 	lines_array_[1].metadata.pointsPos[1] = position
 	lines_array_[3].metadata.pointsPos[0] = position
-	//createSphere(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
+	//createPoint(position, redMaterial_) // создаём меш круга(перпендикуляр) по значению interP.x и interP.z
 }
 
 function updatePointsData(val1, val2){
@@ -734,6 +753,36 @@ function getAngleVectors(val1, val2, val3, val4){
 	fullAngle = sign >= 0 ? degrees : 360 - degrees;
 
 	//console.log("Угол между отрезками в диапазоне от 0 до 360 градусов: " + fullAngle);
+}
+
+function createSprite(url, scene_){
+	var spriteManager = new BABYLON.SpriteManager("spriteManager", url, 1, 512.5, scene_);
+
+	spriteManager.renderingGroupId = 2;
+
+	sprite = new BABYLON.Sprite("sprite", spriteManager);
+	sprite.position.x = 0;
+	sprite.position.y = 0;
+	sprite.size = 0.4;
+	sprite.isPickable = true;
+
+	sprite.property = 'ENDING'
+
+	spriteManager.isPickable = true;   
+}
+
+function resetWallSettings(){
+	points_counter = 0;
+	points_array_ = [];
+	lines_array_ = [];
+	WallMesh_array_ = [];
+	SideWallMesh_array_ = [];
+	LinePointsO_arr = []; 
+	LinePointsT_arr = []; 
+	endPoints = [];
+
+	CompletionValidator = false
+	WallCreateValidator = false
 }
 
 //-------------- TEST SEGMENT --------------//
