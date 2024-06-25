@@ -644,3 +644,119 @@ engine.runRenderLoop(function() {
 window.addEventListener("resize", function() {
 	engine.resize();
 });
+
+
+
+
+////////// test //////////
+
+// Создание куба
+function createBOX(posX, posY, posZ){
+	var TESTbox = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene_);
+	TESTbox.material = new BABYLON.StandardMaterial("boxMaterial", scene_);
+	TESTbox.material.diffuseColor = new BABYLON.Color3(0.8, 0.2, 0.2);
+	TESTbox.position.x = posX
+	TESTbox.position.y = posY
+	TESTbox.position.z = posZ
+	return TESTbox;
+}
+
+function createCIL(posX, posY, posZ){
+	var TESTcylinder = BABYLON.MeshBuilder.CreateBox("box", {width: 2, height: 3, depth: 0.5}, scene_);
+	TESTcylinder.material = new BABYLON.StandardMaterial("cylinderMaterial", scene_);
+	TESTcylinder.material.wireframe = true;
+	TESTcylinder.position.x = posX
+	TESTcylinder.position.y = posY
+	TESTcylinder.position.z = posZ
+	return TESTcylinder;
+}
+
+var box1 = createBOX(0, 0, 0);
+box1.rotation.x = 0.5
+var box2 = createBOX(4, 0, 0);
+var box3 = createBOX(-3, 0, 0);
+//box_arr.push(box1);
+//box_arr.push(box2);
+//box_arr.push(box3);
+
+var cil1 = createCIL(0, 0, 0);
+cil1.rotation.y = 0.4
+var cil2 = createCIL(3, 0, 4);
+//var cil3 = createCIL(4, 0, 4);
+cil_arr.push(cil1);
+cil_arr.push(cil2);
+//cil_arr.push(cil3);
+
+for(let j = 0; j < box_arr.length; j++){
+	box_arr[j].metadata = { intersected: [] }
+}
+
+for(let j = 0; j < box_arr.length; j++){
+
+	if(box_arr[j] && box_arr[j].changed && box_arr[j].changed == true){
+
+		box_arr[j].dispose();
+		var TESTbox_ = createBOX(box_arr[j].position.x, box_arr[j].position.y, box_arr[j].position.z);
+		TESTbox_.rotation = box_arr[j].rotation
+		box_arr[j] = TESTbox_
+
+	}
+
+	if (box_arr[j].metadata !== null && typeof box_arr[j].metadata === 'object' && box_arr[j].metadata.intersected !== undefined) {
+
+	}else{
+		box_arr[j].metadata = { intersected: [] }
+	}
+
+	box_arr[j].metadata.intersected = [];
+
+	box_arr[j].resultCSG = BABYLON.CSG.FromMesh(box_arr[j]);
+
+	for(let i = 0; i < cil_arr.length; i++){
+
+		if (box_arr[j].intersectsMesh(cil_arr[i], false)) {
+			box_arr[j].metadata.intersected.push(cil_arr[i])
+		}
+
+		var meshCSG = BABYLON.CSG.FromMesh(cil_arr[i]);
+		box_arr[j].resultCSG = box_arr[j].resultCSG.subtract(meshCSG);
+	}
+
+	if(box_arr[j].metadata.intersected != 0){
+
+		var resultMesh = box_arr[j].resultCSG.toMesh("resultMesh", blueMaterial_, scene_);
+		resultMesh.material = redMaterial_
+
+		box_arr[j].dispose();
+		box_arr[j] = resultMesh
+		box_arr[j].changed = true
+		
+	}else{
+		box_arr[j].material = blueMaterial_
+	}
+	
+}
+
+for(let j = 0; j < SideWallMesh_array.length; j++){
+	trianglePoints = [];
+	for(let i = 0; i < subtract_array.length; i++){
+		if (SideWallMesh_array[j].intersectsMesh(subtract_array[i], true)) {
+
+			subtract_array[i].scaling.z = (SideWallMesh_array[j].depth * 2) + 0.2
+			subtract_array[i].rotation.y = SideWallMesh_array[j].rotation.y
+
+			trianglePoints.push(points_array[lines_array[j].ValCombination.value[0].combination - 1].position) // начало линии
+			trianglePoints.push(points_array[lines_array[j].ValCombination.value[1].combination - 1].position) // окончание линии
+			trianglePoints.push(subtract_array[i].position) // позиция куба
+
+			diffVector = trianglePoints[1].subtract(trianglePoints[0]);
+			distance = diffVector.length();
+			dotProduct = BABYLON.Vector3.Dot(trianglePoints[2].subtract(trianglePoints[0]), diffVector) / distance;
+			position = trianglePoints[0].add(diffVector.scale(dotProduct / distance));
+			subtract_array[i].position = position
+			diffVector = trianglePoints[2].subtract(position);
+
+		}
+	}
+}
+
