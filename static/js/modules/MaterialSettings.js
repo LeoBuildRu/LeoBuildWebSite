@@ -1,6 +1,9 @@
 export function ExportMaterialSettings(scene_, redMaterial_, blueMaterial_, doubleFaceMaterial_) {
     redMaterial_ = new BABYLON.StandardMaterial("ground", scene_);
     redMaterial_.emissiveColor = BABYLON.Color3.Red();
+    redMaterial_.disableLighting = true;
+    redMaterial_.receiveShadows = false; // отключаем возможность получения теней
+    redMaterial_.backFaceCulling = false; // отключаем отбрасывание теней
 
     blueMaterial_ = new BABYLON.StandardMaterial("ground", scene_);
     blueMaterial_.emissiveColor = BABYLON.Color3.Blue();

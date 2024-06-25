@@ -943,7 +943,8 @@ function createSubtractMesh(mat1, mat2){
 		}
 	}
 	
-
+	setTimeout(
+		() => {
 	for(let j = 0; j < SideWallMesh_array.length; j++){
 
 		if(SideWallMesh_array[j] && SideWallMesh_array[j].changed && SideWallMesh_array[j].changed == true){
@@ -1006,6 +1007,9 @@ function createSubtractMesh(mat1, mat2){
 		}
 
 	}
+},
+1 * 100
+);
 }
 
 //-------------- TEST SEGMENT --------------//

@@ -754,9 +754,71 @@ for(let j = 0; j < SideWallMesh_array.length; j++){
 			dotProduct = BABYLON.Vector3.Dot(trianglePoints[2].subtract(trianglePoints[0]), diffVector) / distance;
 			position = trianglePoints[0].add(diffVector.scale(dotProduct / distance));
 			subtract_array[i].position = position
-			diffVector = trianglePoints[2].subtract(position);
 
 		}
 	}
+}
+
+for(let j = 0; j < SideWallMesh_array.length; j++){
+
+	if(SideWallMesh_array[j] && SideWallMesh_array[j].changed && SideWallMesh_array[j].changed == true){
+
+		SideWallMesh_array[j].dispose();
+		var SideWall = BABYLON.MeshBuilder.CreateBox("box", {width: SideWallMesh_array[j].distance, height: 1, depth: 0.0005}, scene);
+		SideWall.rotation = SideWallMesh_array[j].rotation
+		SideWall.position = SideWallMesh_array[j].position
+		SideWall.distance = SideWallMesh_array[j].distance
+		SideWall.id = SideWallMesh_array[j].id
+		SideWall.metadata = SideWallMesh_array[j].metadata
+		SideWall.immovable = SideWallMesh_array[j].immovable
+		SideWall.depth = SideWallMesh_array[j].depth
+		SideWallMesh_array[j] = SideWall
+
+	}
+
+	materialMESH = new BABYLON.StandardMaterial("material", scene);
+	materialMESH.diffuseColor = generateRandomColor();
+	materialMESH.backFaceCulling = false; // Устанавливаем параметр для отображения обеих сторон полигонов
+
+	SideWallMesh_array[j].material = materialMESH;
+
+	if (SideWallMesh_array[j].metadata !== null && typeof SideWallMesh_array[j].metadata === 'object' && SideWallMesh_array[j].metadata.intersected !== undefined) {
+
+	}else{
+		SideWallMesh_array[j].metadata = { intersected: [] }
+	}
+
+	SideWallMesh_array[j].metadata.intersected = [];
+
+	SideWallMesh_array[j].resultCSG = BABYLON.CSG.FromMesh(SideWallMesh_array[j]);
+
+	for(let i = 0; i < subtract_array.length; i++){
+
+		if (SideWallMesh_array[j].intersectsMesh(subtract_array[i], true)) {
+			SideWallMesh_array[j].metadata.intersected.push(subtract_array[i])
+		}
+
+		var meshCSG = BABYLON.CSG.FromMesh(subtract_array[i]);
+		SideWallMesh_array[j].resultCSG = SideWallMesh_array[j].resultCSG.subtract(meshCSG);
+
+	}
+
+	if(SideWallMesh_array[j].metadata.intersected != 0){
+		var resultMesh = SideWallMesh_array[j].resultCSG.toMesh("resultMesh", mat1, scene);
+		resultMesh.material = mat2
+
+		SideWallMesh_array[j].dispose();
+		resultMesh.distance = SideWallMesh_array[j].distance
+		resultMesh.id = SideWallMesh_array[j].id
+		resultMesh.metadata = SideWallMesh_array[j].metadata
+		resultMesh.immovable = SideWallMesh_array[j].immovable
+		resultMesh.depth = SideWallMesh_array[j].depth
+		SideWallMesh_array[j] = resultMesh
+		SideWallMesh_array[j].changed = true
+	}else{
+		SideWallMesh_array[j].material = mat1
+		SideWallMesh_array[j].changed = true
+	}
+
 }
 
