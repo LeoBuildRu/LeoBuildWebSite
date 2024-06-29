@@ -101,6 +101,7 @@ var target_Index;
 
 //-------------- TEST SEGMENT --------------//
 var materialMESH;
+var test_array = [];
 
 document.getElementById('CreateWall').addEventListener('click', (e)=> {
 	endingOptions.WallCreateValidator = true
@@ -117,55 +118,80 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		TESTcylinder.position.x = posX
 		TESTcylinder.position.y = posY
 		TESTcylinder.position.z = posZ
+		TESTcylinder.property = 'TESTING';
+		//TESTcylinder.immovable = true
 		return TESTcylinder;
 	}
 	
 	for(let i = 0; i<3; i++){
 		var _cil_ = createCIL((i*2), 0, 0);
 		subtract_array.push(_cil_);
-	}
 
-	var _spriteManager_ = new BABYLON.SpriteManager("spriteManager", "/static/img/sprite-group-1.png", 2, 512.5, scene_);
-	_spriteManager_.renderingGroupId = 3
+		subtract_array[i].id = i;
 
-	{
+		var _spriteManager_ = new BABYLON.SpriteManager("spriteManager", "/static/img/sprite-group-1.png", 2, 512.5, scene_);
+		_spriteManager_.renderingGroupId = 3
+
+		{
 		
-		var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
-		_sprite_.position = new BABYLON.Vector3(0.4, 0, 0)
-		_sprite_.positionProperty = new BABYLON.Vector3(0.4, 0, 0)
-		_sprite_.cellIndex = 0;
-		_sprite_.size = 0.4;
-		_sprite_.isPickable = true;
-		_sprite_.property = 'TESTING';
+			var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
+			_sprite_.positionProperty = new BABYLON.Vector3(0.4, 0, 0)
+			_sprite_.position.x = (subtract_array[i].position.x + _sprite_.positionProperty.x)
+			_sprite_.position.y = (subtract_array[i].position.y + _sprite_.positionProperty.y)
+			_sprite_.position.z = (subtract_array[i].position.z + _sprite_.positionProperty.z)
+			_sprite_.cellIndex = 0;
+			_sprite_.size = 0.4;
+			_sprite_.isPickable = true;
+			_sprite_.property = 'TESTING';
+			_sprite_.id = i;
+			_sprite_.isVisible = false;
+			_sprite_.isPickable = false;
+			test_array.push(_sprite_)
 		 
+		}
+
+		{
+
+			var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
+			_sprite_.positionProperty = new BABYLON.Vector3(-0.4, 0, 0)
+			_sprite_.position.x = (subtract_array[i].position.x + _sprite_.positionProperty.x)
+			_sprite_.position.y = (subtract_array[i].position.y + _sprite_.positionProperty.y)
+			_sprite_.position.z = (subtract_array[i].position.z + _sprite_.positionProperty.z)
+			_sprite_.cellIndex = 1;
+			_sprite_.size = 0.4;
+			_sprite_.isPickable = true;
+			_sprite_.property = 'TESTING';
+			_sprite_.id = i;
+			_sprite_.isVisible = false;
+			_sprite_.isPickable = false;
+			test_array.push(_sprite_)
+
+		}
+
+		_spriteManager_.isPickable = true; 
 	}
 
-	{
-
-		var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
-		_sprite_.position = new BABYLON.Vector3(-0.4, 0, 0)
-		_sprite_.positionProperty = new BABYLON.Vector3(-0.4, 0, 0)
-		_sprite_.cellIndex = 1;
-		_sprite_.size = 0.4;
-		//_sprite_.isPickable = true;
-		_sprite_.property = 'TESTING';
-		// Скрыть спрайт
-		_sprite_.isVisible = false;
-
-		// Отключить реакцию на события
-		_sprite_.isPickable = false;
-
-	}
-
-	_spriteManager_.isPickable = true; 
-
-	var spritesInGroup = _spriteManager_.sprites;
+	//var spritesInGroup = _spriteManager_.sprites;
 
 	
 
 	/// TEST--- ///
 	
-	scene_.onPointerDown = function (event, pickResult, pickResult_) {
+	scene_.onPointerDown = function (event, pickResult) {
+
+		console.log(pickResult)
+
+		for(let i = 0; i < test_array.length; i++){
+			if(test_array[i].id == pickResult.pickedMesh.id){
+				// Скрыть спрайт
+				test_array[i].isVisible = true;
+
+				// Отключить реакцию на события
+				test_array[i].isPickable = true;
+			}
+		}
+
+		//pickResult.pickedMesh.immovable = false
 		
 		pickResult = scene.pickSprite(this.pointerX, this.pointerY); // переводим pickResult в разряд чека спрайтов сцены
 
@@ -619,12 +645,12 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 			createSubtractMesh(blueMaterial_, redMaterial_);
 
-			for(let i = 0; i < spritesInGroup.length; i++){
-				console.log(subtract_array[0].position)
-				spritesInGroup[i].position.x = (subtract_array[0].position.x + spritesInGroup[i].positionProperty.x)
-				spritesInGroup[i].position.y = (subtract_array[0].position.y + spritesInGroup[i].positionProperty.y)
-				spritesInGroup[i].position.z = (subtract_array[0].position.z + spritesInGroup[i].positionProperty.z)
-			}
+			//for(let i = 0; i < spritesInGroup.length; i++){
+			//	console.log(subtract_array[0].position)
+			//	spritesInGroup[i].position.x = (subtract_array[0].position.x + spritesInGroup[i].positionProperty.x)
+			//	spritesInGroup[i].position.y = (subtract_array[0].position.y + spritesInGroup[i].positionProperty.y)
+			//	spritesInGroup[i].position.z = (subtract_array[0].position.z + spritesInGroup[i].positionProperty.z)
+			//}
 
             camera_.attachControl(canvas_, true);
             startingPoint = null;
