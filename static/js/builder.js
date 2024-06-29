@@ -69,6 +69,7 @@ let intersectedLines = []; // массив всех линий с одним Val
 let intersectedLines_ = []; // массив всех линий с одним ValCombination за исключением ново-созданных
 let TargetintersectedLine = []; 
 let AnotherIntersectedLine = [];
+let exclusive_array = [];
 var intersectedLineId;
 var intersectionValidator;
 let WallPoints = [];
@@ -91,19 +92,18 @@ var startingPoint;
 var currentMesh;
 let subtract_array = [];
 let trianglePoints = []
-
+var endingOptions = { WallCreateValidator: false, PointValidator: 'MAIN', SphereValidator: 'BUILDING', CompletionValidator: false };
+var valueEndPointConstruction = 0;
+var target_Elem;
+var target_Index;
 
 
 
 //-------------- TEST SEGMENT --------------//
-var WallCreateValidator = false
-var PointValidator = 'MAIN'
-var SphereValidator = 'BUILDING'
-var CompletionValidator = false
 var materialMESH;
-let test_arr = [];
+
 document.getElementById('CreateWall').addEventListener('click', (e)=> {
-	WallCreateValidator = true
+	endingOptions.WallCreateValidator = true
 });
 
 function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
@@ -120,35 +120,48 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		return TESTcylinder;
 	}
 	
-	for(let i = 0; i<30; i++){
+	for(let i = 0; i<3; i++){
 		var _cil_ = createCIL((i*2), 0, 0);
 		subtract_array.push(_cil_);
 	}
-	//var cil1 = createCIL(0, 0, 0);
-	//var cil2 = createCIL(4, 0, 0);
-	//subtract_array.push(cil1);
-	//subtract_array.push(cil2);
 
-	//var cube = BABYLON.MeshBuilder.CreateBox("cube", { size: 1 }, scene);
-	//cube.position = new BABYLON.Vector3(0, 0, 2.5);
-//
-	//// Создаем треугольник
-	//trianglePoints.push(new BABYLON.Vector3(0, 0, 0)) // начало линии
-	//trianglePoints.push(new BABYLON.Vector3(4, 0, 5)) // окончание линии
-	//trianglePoints.push(new BABYLON.Vector3(0, 0, 2.5)) // позиция куба
-//
-	//diffVector = trianglePoints[1].subtract(trianglePoints[0]);
-	//distance = diffVector.length();
-	//dotProduct = BABYLON.Vector3.Dot(trianglePoints[2].subtract(trianglePoints[0]), diffVector) / distance;
-	//position = trianglePoints[0].add(diffVector.scale(dotProduct / distance));
-	//cube.position = position
-//
-	//// Проверяем, что точка пересечения находится на отрезке
-	//if (dotProduct >= 0 && dotProduct <= distance) {
-	//	console.log("Position of intersection:", position);
-	//} else {
-	//	console.log("No intersection point found on the base");
-	//}
+	var _spriteManager_ = new BABYLON.SpriteManager("spriteManager", "/static/img/sprite-group-1.png", 2, 512.5, scene_);
+	_spriteManager_.renderingGroupId = 3
+
+	{
+		
+		var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
+		_sprite_.position = new BABYLON.Vector3(0.4, 0, 0)
+		_sprite_.positionProperty = new BABYLON.Vector3(0.4, 0, 0)
+		_sprite_.cellIndex = 0;
+		_sprite_.size = 0.4;
+		_sprite_.isPickable = true;
+		_sprite_.property = 'TESTING';
+		 
+	}
+
+	{
+
+		var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
+		_sprite_.position = new BABYLON.Vector3(-0.4, 0, 0)
+		_sprite_.positionProperty = new BABYLON.Vector3(-0.4, 0, 0)
+		_sprite_.cellIndex = 1;
+		_sprite_.size = 0.4;
+		//_sprite_.isPickable = true;
+		_sprite_.property = 'TESTING';
+		// Скрыть спрайт
+		_sprite_.isVisible = false;
+
+		// Отключить реакцию на события
+		_sprite_.isPickable = false;
+
+	}
+
+	_spriteManager_.isPickable = true; 
+
+	var spritesInGroup = _spriteManager_.sprites;
+
+	
 
 	/// TEST--- ///
 	
@@ -156,24 +169,30 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		
 		pickResult = scene.pickSprite(this.pointerX, this.pointerY); // переводим pickResult в разряд чека спрайтов сцены
 
+		if(pickResult && pickResult.pickedSprite && pickResult.pickedSprite.property == 'TESTING'){
+			console.log('ENDING')
+		}
+
 		// проверяем, если спрайт действительно есть - запускаем процесс ресета настроек стен и удаления спрайта
 		// в противном случае присваиваем к переменной pickResult значение пика по мешу
 		if(pickResult && pickResult.pickedSprite && pickResult.pickedSprite.property == 'ENDING'){
+			valueEndPointConstruction = SideWallMesh_array.length
+			console.log(valueEndPointConstruction)
 			resetWallSettings();
 
 			check_mark.dispose()
 		}
 
-		if (pickResult && pickResult.pickedSprite && pickResult.pickedSprite.BegEnd === 'start' && WallCreateValidator == true) {
+		if (pickResult && pickResult.pickedSprite && pickResult.pickedSprite.BegEnd === 'start' && endingOptions.WallCreateValidator == true) {
 			targetMesh = pickResult.pickedSprite; // присваиваем к переменной targetMesh значение кликнутого меша точки стены
 			targetValCombination = pickResult.pickedSprite.ValCombination.combination; // потсваиваем к переменной targetValCombination точки соответствия
 			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
 			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
 			// Получаем координаты нажатия
-			PointValidator = 'MAIN';
-			SphereValidator = 'ENDING'
-			CompletionValidator = true
+			endingOptions.PointValidator = 'MAIN';
+			endingOptions.SphereValidator = 'ENDING'
+			endingOptions.CompletionValidator = true
 			position = pickResult.pickedSprite.position;
 			createPoint(position, redMaterial_)
 			
@@ -187,7 +206,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 	planeActionManager = new BABYLON.ActionManager(scene_);
 	plane_.actionManager = planeActionManager;
 	planeActionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function (evt) {
-		if(WallCreateValidator == true){
+		if(endingOptions.WallCreateValidator == true){
 			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
 			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
@@ -203,7 +222,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 				check_mark = createSprite("/static/img/check_mark.png", 0.4, 'ENDING', 2, scene_);
 			}
 
-			PointValidator = 'MAIN';
+			endingOptions.PointValidator = 'MAIN';
 			createPoint(position, redMaterial_)
 
 			if(points_counter == 2){
@@ -242,7 +261,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			SideWallMesh_array_.shift();
 		}
 
-		PointValidator = 'SIDE';
+		endingOptions.PointValidator = 'SIDE';
 	
 		calculateNormal(points_array_[val1].position, points_array_[val2].position) // находим точки(перпендикуляры): posOx и posOz с одной стороны posTx и posTz с другой стороны
 		position = new BABYLON.Vector3(posOx, 0, posOz); // выставляем значение позиции на posOx и posOz
@@ -312,7 +331,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			createWall(0, 1);
 			createSideWall(0)
 			createSideWall(1)
-			if(CompletionValidator != true){
+			if(endingOptions.CompletionValidator != true){
 				createWall(2, 3);
 				createSideWall(2)
 				createSideWall(3)
@@ -333,13 +352,13 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			});
 
 			//удаление из массива старых мешей стен, в качестве улучшения работоспособности кода
-			if(CompletionValidator != true){
+			if(endingOptions.CompletionValidator != true){
 				WallMesh_array.splice((WallMesh_array.length-3), 1);
 				SideWallMesh_array.splice((SideWallMesh_array.length-6), 1);
 				SideWallMesh_array.splice((SideWallMesh_array.length-5), 1);
 			}
 
-			if(CompletionValidator == true){
+			if(endingOptions.CompletionValidator == true){
 
 				intersectedLines = []
 				//Функция перебора всех линий, с таким же ValCombination, как и у нажатой точки
@@ -371,28 +390,28 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 				removeItemFromArray(AnotherIntersectedLine, intersectedLineId)
 
-				test_arr = [];
+				exclusive_array = [];
 
 				//функция удаления старого меша на месте завершающего клика
 				WallMesh_array.forEach(item => {
 					if ((item.id === intersectedLineId.IdentifierWall) || (item.id === AnotherIntersectedLine[0].IdentifierWall)) {
 						item.dispose();
-						test_arr.push(item)
+						exclusive_array.push(item)
 					}
 				});
 
-				WallMesh_array = removeDuplicates(WallMesh_array, test_arr);
+				WallMesh_array = removeDuplicates(WallMesh_array, exclusive_array);
 
-				test_arr = [];
+				exclusive_array = [];
 				
 				SideWallMesh_array.forEach(item => {
 					if ((item.id === intersectedLineId.IdentifierSideWall) || (item.id === AnotherIntersectedLine[0].IdentifierSideWall)) {
 						item.dispose();
-						test_arr.push(item)
+						exclusive_array.push(item)
 					}
 				});
 
-				SideWallMesh_array = removeDuplicates(SideWallMesh_array, test_arr);
+				SideWallMesh_array = removeDuplicates(SideWallMesh_array, exclusive_array);
 				
 				if(TargetLine == 'detect 1'){
 					lines_array_.push(intersectedLineId)
@@ -431,9 +450,24 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 				resetWallSettings();
 
-				let firstElement = points_array.shift(); // удаляем первый элемент массива и сохраняем его
-				points_array.push(firstElement); // добавляем первый элемент массива в конец
+				{
+					target_Elem = SideWallMesh_array.pop(); // Удаляем последний элемент из массива
+					target_Index = (valueEndPointConstruction);
+
+					SideWallMesh_array.splice(target_Index, 0, target_Elem);
+				}
+				{
+					target_Elem = SideWallMesh_array.pop(); // Удаляем последний элемент из массива
+					target_Index = (valueEndPointConstruction);
+					
+					SideWallMesh_array.splice(target_Index, 0, target_Elem);
+				}
+
+				click_counter -= 1;
+
+				valueEndPointConstruction = SideWallMesh_array.length
 			}
+			//console.log(click_counter)
 		}
 	}
 
@@ -582,9 +616,16 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
     var pointerUp = function () {
         if (startingPoint) {
-			console.time('createSubtractMesh');
+
 			createSubtractMesh(blueMaterial_, redMaterial_);
-			console.timeEnd('createSubtractMesh');
+
+			for(let i = 0; i < spritesInGroup.length; i++){
+				console.log(subtract_array[0].position)
+				spritesInGroup[i].position.x = (subtract_array[0].position.x + spritesInGroup[i].positionProperty.x)
+				spritesInGroup[i].position.y = (subtract_array[0].position.y + spritesInGroup[i].positionProperty.y)
+				spritesInGroup[i].position.z = (subtract_array[0].position.z + spritesInGroup[i].positionProperty.z)
+			}
+
             camera_.attachControl(canvas_, true);
             startingPoint = null;
             return;
@@ -630,12 +671,12 @@ function createPoint(position_, material_){
 	// Создание sphere в позиции нажатия
 	var wallPoint;
 	MeshUniqueId = 0;
-	if(SphereValidator != 'ENDING'){
+	if(endingOptions.SphereValidator != 'ENDING'){
 		wallPoint = createSprite("/static/img/red_point.png", 0.2, 'BASE', 1, scene)
 		wallPoint.position = position_
 	}
 
-	if(PointValidator == "MAIN" && SphereValidator != 'ENDING'){
+	if(endingOptions.PointValidator == "MAIN" && endingOptions.SphereValidator != 'ENDING'){
 		// функция генерации уникального ID сфере
 		for (let i = 0; i < characters.length; i++) {
 			var randomIndex = Math.floor(Math.random() * characters.length);
@@ -649,9 +690,9 @@ function createPoint(position_, material_){
 		points_array_.push(wallPoint) // пуш в массив последних трёх points для вычисления перпендикуляров и пересечений
 	}
 
-	if(SphereValidator == 'ENDING'){
+	if(endingOptions.SphereValidator == 'ENDING'){
 		points_array_.push(targetMesh)
-		SphereValidator = 'BUILDING'
+		endingOptions.SphereValidator = 'BUILDING'
 	}
 }
 
@@ -814,14 +855,14 @@ function updateDataLines(val1, val2){
 		if (element.id === lines_array_[2].id) { 
 			findMiddlePoint(lines_array_[2].metadata.pointsPos[0], lines_array_[2].metadata.pointsPos[1])
 			element.metadata = { pointsPos: val1, middlePos: middleVector } // устанавливаем линии аттрибут, который будет хранить в ней её крайние и серединную точку
-			if(CompletionValidator != true){
+			if(endingOptions.CompletionValidator != true){
 				element.ValCombination = { value: [points_array_[1].ValCombination, points_array_[2].ValCombination] } // устанавливаем для линии точки соответствия(к кому она прикреплена)
 			}
 		} 
 		if (element.id === lines_array_[3].id) { 
 			findMiddlePoint(lines_array_[3].metadata.pointsPos[0], lines_array_[3].metadata.pointsPos[1])
 			element.metadata = { pointsPos: val2, middlePos: middleVector } // устанавливаем линии аттрибут, который будет хранить в ней её крайние и серединную точку
-			if(CompletionValidator != true){
+			if(endingOptions.CompletionValidator != true){
 				element.ValCombination = { value: [points_array_[1].ValCombination, points_array_[2].ValCombination] } // устанавливаем для линии точки соответствия(к кому она прикреплена)
 			}
 		} 
@@ -887,15 +928,15 @@ function createSprite(url, size, property_, renderingPos, scene_){
 
 	spriteManager.renderingGroupId = renderingPos;
 
-	var _sprite_ = new BABYLON.Sprite("sprite", spriteManager);
-	_sprite_.size = size;
-	_sprite_.isPickable = true;
+	var sprite = new BABYLON.Sprite("sprite", spriteManager);
+	sprite.size = size;
+	sprite.isPickable = true;
 
-	_sprite_.property = property_;
+	sprite.property = property_;
 
 	spriteManager.isPickable = true;   
 
-	return _sprite_;
+	return sprite;
 }
 
 // Функция для обновления размера спрайта в зависимости от дистанции
@@ -920,8 +961,8 @@ function resetWallSettings(){
 	LinePointsT_arr = []; 
 	endPoints = [];
 
-	CompletionValidator = false
-	WallCreateValidator = false
+	endingOptions.CompletionValidator = false
+	endingOptions.WallCreateValidator = false
 }
 
 function createSubtractMesh(mat1, mat2){
@@ -987,6 +1028,7 @@ function createSubtractMesh(mat1, mat2){
 
 					if (SideWallMesh_array[j].intersectsMesh(subtract_array[i], true)) {
 						SideWallMesh_array[j].metadata.intersected.push(subtract_array[i])
+						
 					}
 
 					var meshCSG = BABYLON.CSG.FromMesh(subtract_array[i]);
