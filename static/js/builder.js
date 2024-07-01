@@ -102,6 +102,7 @@ var target_Index;
 //-------------- TEST SEGMENT --------------//
 var materialMESH;
 var test_array = [];
+var testValue;
 
 document.getElementById('CreateWall').addEventListener('click', (e)=> {
 	endingOptions.WallCreateValidator = true
@@ -119,7 +120,8 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		TESTcylinder.position.y = posY
 		TESTcylinder.position.z = posZ
 		TESTcylinder.property = 'TESTING';
-		//TESTcylinder.immovable = true
+		TESTcylinder.immovable = true
+		TESTcylinder.testValue = 0;
 		return TESTcylinder;
 	}
 	
@@ -142,7 +144,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			_sprite_.cellIndex = 0;
 			_sprite_.size = 0.4;
 			_sprite_.isPickable = true;
-			_sprite_.property = 'TESTING';
+			_sprite_.property = 'HIDE SPRITES';
 			_sprite_.id = i;
 			_sprite_.isVisible = false;
 			_sprite_.isPickable = false;
@@ -160,7 +162,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			_sprite_.cellIndex = 1;
 			_sprite_.size = 0.4;
 			_sprite_.isPickable = true;
-			_sprite_.property = 'TESTING';
+			_sprite_.property = 'DELETE';
 			_sprite_.id = i;
 			_sprite_.isVisible = false;
 			_sprite_.isPickable = false;
@@ -177,41 +179,46 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 	/// TEST--- ///
 	
-	scene_.onPointerDown = function (event, pickResult) {
+	scene_.onPointerDown = function (event, pickResult, pickSprite, pickMesh) {
 
-		console.log(pickResult)
+		pickMesh = pickResult;
+		pickSprite = scene.pickSprite(this.pointerX, this.pointerY); // переводим pickResult в разряд чека спрайтов сцены
+		console.log(pickSprite)
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'HIDE SPRITES'){
+			for(let i = 0; i < test_array.length; i++){
+				if(test_array[i].id == pickSprite.pickedSprite.id){
+					test_array[i].isVisible = false;
+					test_array[i].isPickable = false;
+					pickMesh.pickedMesh.testValue = 0
+				}
+			}
+		}
 
 		for(let i = 0; i < test_array.length; i++){
-			if(test_array[i].id == pickResult.pickedMesh.id){
+			if(test_array[i].id == pickMesh.pickedMesh.id){
+
 				// Скрыть спрайт
 				test_array[i].isVisible = true;
 
 				// Отключить реакцию на события
 				test_array[i].isPickable = true;
+
 			}
-		}
-
-		//pickResult.pickedMesh.immovable = false
-		
-		pickResult = scene.pickSprite(this.pointerX, this.pointerY); // переводим pickResult в разряд чека спрайтов сцены
-
-		if(pickResult && pickResult.pickedSprite && pickResult.pickedSprite.property == 'TESTING'){
-			console.log('ENDING')
 		}
 
 		// проверяем, если спрайт действительно есть - запускаем процесс ресета настроек стен и удаления спрайта
 		// в противном случае присваиваем к переменной pickResult значение пика по мешу
-		if(pickResult && pickResult.pickedSprite && pickResult.pickedSprite.property == 'ENDING'){
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'ENDING'){
 			valueEndPointConstruction = SideWallMesh_array.length
-			console.log(valueEndPointConstruction)
 			resetWallSettings();
 
 			check_mark.dispose()
 		}
 
-		if (pickResult && pickResult.pickedSprite && pickResult.pickedSprite.BegEnd === 'start' && endingOptions.WallCreateValidator == true) {
-			targetMesh = pickResult.pickedSprite; // присваиваем к переменной targetMesh значение кликнутого меша точки стены
-			targetValCombination = pickResult.pickedSprite.ValCombination.combination; // потсваиваем к переменной targetValCombination точки соответствия
+		if (pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.BegEnd === 'start' && endingOptions.WallCreateValidator == true) {
+			targetMesh = pickSprite.pickedSprite; // присваиваем к переменной targetMesh значение кликнутого меша точки стены
+			targetValCombination = pickSprite.pickedSprite.ValCombination.combination; // потсваиваем к переменной targetValCombination точки соответствия
 			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
 			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
@@ -219,14 +226,14 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			endingOptions.PointValidator = 'MAIN';
 			endingOptions.SphereValidator = 'ENDING'
 			endingOptions.CompletionValidator = true
-			position = pickResult.pickedSprite.position;
+			position = pickSprite.pickedSprite.position;
 			createPoint(position, redMaterial_)
 			
 			creating(1, 2);
 
 			check_mark.dispose()
 		}
-		pickResult = 0;
+		pickSprite = 0;
 	};
 	
 	planeActionManager = new BABYLON.ActionManager(scene_);
@@ -493,7 +500,6 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 				valueEndPointConstruction = SideWallMesh_array.length
 			}
-			//console.log(click_counter)
 		}
 	}
 
@@ -644,13 +650,15 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
         if (startingPoint) {
 
 			createSubtractMesh(blueMaterial_, redMaterial_);
-
-			//for(let i = 0; i < spritesInGroup.length; i++){
-			//	console.log(subtract_array[0].position)
-			//	spritesInGroup[i].position.x = (subtract_array[0].position.x + spritesInGroup[i].positionProperty.x)
-			//	spritesInGroup[i].position.y = (subtract_array[0].position.y + spritesInGroup[i].positionProperty.y)
-			//	spritesInGroup[i].position.z = (subtract_array[0].position.z + spritesInGroup[i].positionProperty.z)
-			//}
+			
+			for(let i = 0; i < test_array.length; i++){
+				if(test_array[i].id == currentMesh.id){
+					//console.log(test_array[i].position)
+					test_array[i].position.x = (currentMesh.position.x + test_array[i].positionProperty.x)
+					test_array[i].position.y = (currentMesh.position.y + test_array[i].positionProperty.y)
+					test_array[i].position.z = (currentMesh.position.z + test_array[i].positionProperty.z)
+				}
+			}
 
             camera_.attachControl(canvas_, true);
             startingPoint = null;
