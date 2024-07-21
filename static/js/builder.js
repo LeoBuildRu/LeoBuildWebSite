@@ -96,13 +96,14 @@ var endingOptions = { WallCreateValidator: false, PointValidator: 'MAIN', Sphere
 var valueEndPointConstruction = 0;
 var target_Elem;
 var target_Index;
+let sprites_array = [];
+let subjectSprite_array = [];
 
 
 
 //-------------- TEST SEGMENT --------------//
 var materialMESH;
-var test_array = [];
-var testValue;
+var pickValidator = true;
 
 document.getElementById('CreateWall').addEventListener('click', (e)=> {
 	endingOptions.WallCreateValidator = true
@@ -124,58 +125,41 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		TESTcylinder.testValue = 0;
 		return TESTcylinder;
 	}
-	
+
 	for(let i = 0; i<3; i++){
 		var _cil_ = createCIL((i*2), 0, 0);
 		subtract_array.push(_cil_);
 
 		subtract_array[i].id = i;
 
-		var _spriteManager_ = new BABYLON.SpriteManager("spriteManager", "/static/img/sprite-group-1.png", 2, 512.5, scene_);
-		_spriteManager_.renderingGroupId = 3
+		var _sprite_ = createSprite("/static/img/sprite-group-1.png", 0.4, 'HIDE SPRITES', 3, scene_)
+		_sprite_.cellIndex = 0;
+		_sprite_.compatibility = i;
+		_sprite_.isVisible = false
+		_sprite_.isPickable = false
+		sprites_array.push(_sprite_)
 
-		{
-		
-			var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
-			_sprite_.positionProperty = new BABYLON.Vector3(0.4, 0, 0)
-			_sprite_.position.x = (subtract_array[i].position.x + _sprite_.positionProperty.x)
-			_sprite_.position.y = (subtract_array[i].position.y + _sprite_.positionProperty.y)
-			_sprite_.position.z = (subtract_array[i].position.z + _sprite_.positionProperty.z)
-			_sprite_.cellIndex = 0;
-			_sprite_.size = 0.4;
-			_sprite_.isPickable = true;
-			_sprite_.property = 'HIDE SPRITES';
-			_sprite_.id = i;
-			_sprite_.isVisible = false;
-			_sprite_.isPickable = false;
-			test_array.push(_sprite_)
-		 
-		}
+		var _subjectSprite_ = createSubjectSprite(subtract_array[i], new BABYLON.Vector3(-0.4, 0, 0), new BABYLON.Vector3(0.4, 0, 0), i, _sprite_);
+		subjectSprite_array.push(_subjectSprite_)
 
-		{
+		var _sprite_ = createSprite("/static/img/sprite-group-1.png", 0.4, 'DELETE', 3, scene_)
+		_sprite_.cellIndex = 1;
+		_sprite_.compatibility = i;
+		_sprite_.isVisible = false
+		_sprite_.isPickable = false
+		sprites_array.push(_sprite_)
 
-			var _sprite_ = new BABYLON.Sprite("sprite", _spriteManager_);
-			_sprite_.positionProperty = new BABYLON.Vector3(-0.4, 0, 0)
-			_sprite_.position.x = (subtract_array[i].position.x + _sprite_.positionProperty.x)
-			_sprite_.position.y = (subtract_array[i].position.y + _sprite_.positionProperty.y)
-			_sprite_.position.z = (subtract_array[i].position.z + _sprite_.positionProperty.z)
-			_sprite_.cellIndex = 1;
-			_sprite_.size = 0.4;
-			_sprite_.isPickable = true;
-			_sprite_.property = 'DELETE';
-			_sprite_.id = i;
-			_sprite_.isVisible = false;
-			_sprite_.isPickable = false;
-			test_array.push(_sprite_)
+		var _subjectSprite_ = createSubjectSprite(subtract_array[i], new BABYLON.Vector3(0.4, 0, 0), new BABYLON.Vector3(-0.4, 0, 0), i, _sprite_);
+		subjectSprite_array.push(_subjectSprite_)
 
-		}
-
-		_spriteManager_.isPickable = true; 
 	}
 
-	//var spritesInGroup = _spriteManager_.sprites;
-
-	
+	scene_.onBeforeRenderObservable.add(() => {
+		for(let i = 0; i < subjectSprite_array.length; i++){
+			var direction = scene.activeCamera.getDirection(BABYLON.Axis.Z).scale(-1);
+			subjectSprite_array[i].lookAt(subjectSprite_array[i].position.add(direction), 0, 0, Math.PI);
+		}
+	});
 
 	/// TEST--- ///
 	
@@ -183,27 +167,75 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 		pickMesh = pickResult;
 		pickSprite = scene.pickSprite(this.pointerX, this.pointerY); // переводим pickResult в разряд чека спрайтов сцены
-		console.log(pickSprite)
 
 		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'HIDE SPRITES'){
-			for(let i = 0; i < test_array.length; i++){
-				if(test_array[i].id == pickSprite.pickedSprite.id){
-					test_array[i].isVisible = false;
-					test_array[i].isPickable = false;
-					pickMesh.pickedMesh.testValue = 0
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickMesh.pickedMesh.immovable = true;
+
+					pickMesh.pickedMesh.testValue = 0;
+
+					sprites_array[i].isVisible = false;
+					sprites_array[i].isPickable = false;
+					pickValidator = false;
+
 				}
 			}
 		}
 
-		for(let i = 0; i < test_array.length; i++){
-			if(test_array[i].id == pickMesh.pickedMesh.id){
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'DELETE'){
+			
+			// удаление спрайтов
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
 
-				// Скрыть спрайт
-				test_array[i].isVisible = true;
+					pickValidator = false;
 
-				// Отключить реакцию на события
-				test_array[i].isPickable = true;
+					pickMesh.pickedMesh.dispose();
+					sprites_array[i].dispose();
 
+					removeItemFromArray(subtract_array, pickMesh.pickedMesh)
+					removeItemFromArray(sprites_array, sprites_array[i])
+
+					i = i - 1;
+
+				}
+			}
+
+			// удаление боксов спрайтов
+			for(let i = 0; i < subjectSprite_array.length; i++){
+				if(subjectSprite_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					subjectSprite_array[i].dispose();
+					removeItemFromArray(subjectSprite_array, subjectSprite_array[i])
+
+					i = i - 1;
+
+				}
+			}
+
+		}
+
+		if(pickValidator == true){
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickMesh.pickedMesh.id){
+
+					if(pickMesh.pickedMesh.testValue < 4){
+						pickMesh.pickedMesh.testValue += 1;
+					}
+
+					// Скрыть спрайт
+					sprites_array[i].isVisible = true;
+	
+					// Отключить реакцию на события
+					sprites_array[i].isPickable = true;
+
+					if(pickMesh.pickedMesh.testValue == 4){
+						pickMesh.pickedMesh.immovable = false;
+					}
+	
+				}
 			}
 		}
 
@@ -234,6 +266,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			check_mark.dispose()
 		}
 		pickSprite = 0;
+		pickValidator = true;
 	};
 	
 	planeActionManager = new BABYLON.ActionManager(scene_);
@@ -651,12 +684,11 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 			createSubtractMesh(blueMaterial_, redMaterial_);
 			
-			for(let i = 0; i < test_array.length; i++){
-				if(test_array[i].id == currentMesh.id){
-					//console.log(test_array[i].position)
-					test_array[i].position.x = (currentMesh.position.x + test_array[i].positionProperty.x)
-					test_array[i].position.y = (currentMesh.position.y + test_array[i].positionProperty.y)
-					test_array[i].position.z = (currentMesh.position.z + test_array[i].positionProperty.z)
+			for(let i = 0; i < subjectSprite_array.length; i++){
+				if(subjectSprite_array[i].compatibility == currentMesh.id){
+					subjectSprite_array[i].position.x = (currentMesh.position.x + subjectSprite_array[i].positionProperty.x)
+					subjectSprite_array[i].position.y = (currentMesh.position.y + subjectSprite_array[i].positionProperty.y)
+					subjectSprite_array[i].position.z = (currentMesh.position.z + subjectSprite_array[i].positionProperty.z)
 				}
 			}
 
@@ -685,7 +717,9 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
     scene_.onPointerObservable.add((pointerInfo) => {     
         switch (pointerInfo.type) {
 			case BABYLON.PointerEventTypes.POINTERDOWN:
+				console.log(pointerInfo)
 				if(pointerInfo.pickInfo.hit && pointerInfo.pickInfo.pickedMesh != plane_ && pointerInfo.pickInfo.pickedMesh.immovable != true) {
+					
                     pointerDown(pointerInfo.pickInfo.pickedMesh)
                 }
 				break;
@@ -1093,6 +1127,18 @@ function createSubtractMesh(mat1, mat2){
 	);
 }
 
+function createSubjectSprite(arr_, positionProperty_, pivotSettings_, compatibility_, sprite_){
+	var box = BABYLON.MeshBuilder.CreateBox("box", {width: 0.001, height: 0.001, depth: 0.001}, scene, true);
+	box.compatibility = compatibility_;
+	box.positionProperty = positionProperty_
+	box.position.x = arr_.position.x + box.positionProperty.x
+	box.position.y = arr_.position.y + box.positionProperty.y
+	box.position.z = arr_.position.z + box.positionProperty.z
+	box.setPivotPoint(pivotSettings_);
+	sprite_.position = box.getAbsolutePosition()
+	return box;
+}
+
 //-------------- TEST SEGMENT --------------//
 
 //функция удаления переменных одного массива из другого
@@ -1106,7 +1152,6 @@ function removeItemFromArray(arr, item) {
     if (index > -1) {
         arr.splice(index, 1);
     }
-    return arr;
 }
 
 function generateRandomColor() {
