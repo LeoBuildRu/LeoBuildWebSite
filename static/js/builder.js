@@ -127,6 +127,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 	}
 
 	for(let i = 0; i<3; i++){
+		
 		var _cil_ = createCIL((i*2), 0, 0);
 		subtract_array.push(_cil_);
 
@@ -199,6 +200,8 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 					removeItemFromArray(sprites_array, sprites_array[i])
 
 					i = i - 1;
+
+					createSubtractMesh(blueMaterial_, redMaterial_);
 
 				}
 			}
@@ -717,7 +720,6 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
     scene_.onPointerObservable.add((pointerInfo) => {     
         switch (pointerInfo.type) {
 			case BABYLON.PointerEventTypes.POINTERDOWN:
-				console.log(pointerInfo)
 				if(pointerInfo.pickInfo.hit && pointerInfo.pickInfo.pickedMesh != plane_ && pointerInfo.pickInfo.pickedMesh.immovable != true) {
 					
                     pointerDown(pointerInfo.pickInfo.pickedMesh)
