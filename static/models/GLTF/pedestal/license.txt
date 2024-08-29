@@ -1,0 +1,8 @@
+Model Information:
+* title:	Industrial - Rusty tool cabinet
+* source:	https://sketchfab.com/3d-models/industrial-rusty-tool-cabinet-88ac509ab4444155b3ddb6070329914d
+* author:	Anfossi Valentin (https://sketchfab.com/lebiff)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

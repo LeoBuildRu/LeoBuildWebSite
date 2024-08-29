@@ -1,5 +1,7 @@
 import { ExportSceneSettings } from './modules/SceneSettings.js';
 import { ExportMaterialSettings } from './modules/MaterialSettings.js';
+BABYLON.SceneLoader.ShowLoadingScreen = false;
+
 
 var canvas = document.getElementById("renderCanvas");
 var engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -35,7 +37,7 @@ var createScene = function() {
 	blueMaterial = MaterialArguments.blueMaterial 
 	doubleFaceMaterial = MaterialArguments.doubleFaceMaterial 
 
-	builder(canvas, scene, camera, plane, redMaterial, blueMaterial, doubleFaceMaterial)
+	builder(canvas, scene, light, camera, plane, redMaterial, blueMaterial, doubleFaceMaterial)
 
   	return scene;
 };
@@ -44,8 +46,8 @@ var createScene = function() {
 var planeActionManager
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; // переменная для генерации рандомного ID состоящего из 16 символов
 var MeshUniqueId = ''; // уникальный ID для каждой сферы
-var click_counter = 0; // обозначает сколько всего кликов было сделано
-var points_counter = 0; // обозначает сколько кликов для создания стен было сделано
+var wall_click_counter = 0; // обозначает сколько всего кликов было сделано
+var wall_points_counter = 0; // обозначает сколько кликов для создания стен было сделано
 var pickInfo, position; // координаты нажатия 
 let points_array = []; // массив для позиций точек в формате вектор3
 let points_array_ = []; // массив для хранения последних трёх позиций точек в формате вектор3
@@ -92,16 +94,31 @@ var startingPoint;
 var currentMesh;
 let subtract_array = [];
 let trianglePoints = []
-var endingOptions = { WallCreateValidator: false, PointValidator: 'MAIN', SphereValidator: 'BUILDING', CompletionValidator: false };
+var endingOptions = { WallCreateValidator: false, FloorCreateValidator: false, PointValidator: 'MAIN', SphereValidator: 'BUILDING', CompletionValidator: false };
 var valueEndPointConstruction = 0;
 var target_Elem;
 var target_Index;
 let sprites_array = [];
 let subjectSprite_array = [];
+var movingOptions = { permission: false, isMovingUp: false, isMovingDown: false, isRotateLeft: false, isRotateRight: false } // переменная опций разрешения движения мешей при нажатии на спрайт
+// Переменные для ускорения, скорости и максимальной скорости позиции меша при нажатии на спрайт
+var acceleration = 0.001; // Регулируйте это значение для изменения ускорения
+var maxSpeed = 0.05; // Максимальная скорость
+var speedUp = 0; 
+var speedDown = 0;
+var speedLeft = 0; 
+var speedRight = 0;
+//-------------------------
+var target_compatibility;
+var model_array = [];
+var targetModel;
+var floor_click_counter = 0;
 
 
 
 //-------------- TEST SEGMENT --------------//
+var testARR = [];
+var testSprite;
 var materialMESH;
 var pickValidator = true;
 
@@ -109,7 +126,11 @@ document.getElementById('CreateWall').addEventListener('click', (e)=> {
 	endingOptions.WallCreateValidator = true
 });
 
-function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
+document.getElementById('CreateFloor').addEventListener('click', (e)=> {
+	endingOptions.FloorCreateValidator = true
+});
+
+function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
 
 	/// TEST+++ ///
 
@@ -120,40 +141,133 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		TESTcylinder.position.x = posX
 		TESTcylinder.position.y = posY
 		TESTcylinder.position.z = posZ
+		TESTcylinder.sizeProperty = { width: 2, height: 3, depth: 1 }
 		TESTcylinder.property = 'TESTING';
 		TESTcylinder.immovable = true
 		TESTcylinder.testValue = 0;
 		return TESTcylinder;
 	}
 
-	for(let i = 0; i<3; i++){
-		
-		var _cil_ = createCIL((i*2), 0, 0);
-		subtract_array.push(_cil_);
+	document.querySelectorAll('.CreateCill').forEach(element => {
+		element.addEventListener('click', (e) => {
 
-		subtract_array[i].id = i;
+		MeshUniqueId = 0;
+
+		// функция генерации уникального ID сфере
+		for (let i = 0; i < characters.length; i++) {
+			var randomIndex = Math.floor(Math.random() * characters.length);
+			MeshUniqueId += characters.charAt(randomIndex);
+		}
+
+		var _cil_ = createCIL(0, 0, 0);
+		_cil_.immovablePermission = false;
 
 		var _sprite_ = createSprite("/static/img/sprite-group-1.png", 0.4, 'HIDE SPRITES', 3, scene_)
 		_sprite_.cellIndex = 0;
-		_sprite_.compatibility = i;
+		_sprite_.compatibility = MeshUniqueId;
 		_sprite_.isVisible = false
 		_sprite_.isPickable = false
 		sprites_array.push(_sprite_)
 
-		var _subjectSprite_ = createSubjectSprite(subtract_array[i], new BABYLON.Vector3(-0.4, 0, 0), new BABYLON.Vector3(0.4, 0, 0), i, _sprite_);
+		var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(-0.4, -0.3, 0), new BABYLON.Vector3(0.4, 0.3, 0), MeshUniqueId, _sprite_);
 		subjectSprite_array.push(_subjectSprite_)
 
 		var _sprite_ = createSprite("/static/img/sprite-group-1.png", 0.4, 'DELETE', 3, scene_)
 		_sprite_.cellIndex = 1;
-		_sprite_.compatibility = i;
+		_sprite_.compatibility = MeshUniqueId;
 		_sprite_.isVisible = false
 		_sprite_.isPickable = false
 		sprites_array.push(_sprite_)
 
-		var _subjectSprite_ = createSubjectSprite(subtract_array[i], new BABYLON.Vector3(0.4, 0, 0), new BABYLON.Vector3(-0.4, 0, 0), i, _sprite_);
+		var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(0.4, -0.3, 0), new BABYLON.Vector3(-0.4, 0.3, 0), MeshUniqueId, _sprite_);
 		subjectSprite_array.push(_subjectSprite_)
 
-	}
+		if (element.getAttribute('type') === 'WindowMesh') {
+
+			var _sprite_ = createSprite("/static/img/sprite-group-2.png", 0.4, 'UP', 3, scene_)
+			_sprite_.cellIndex = 1;
+			_sprite_.compatibility = MeshUniqueId;
+			_sprite_.isVisible = false
+			_sprite_.isPickable = false
+			sprites_array.push(_sprite_)
+
+			var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(-0.8, 0.3, 0), new BABYLON.Vector3(0.8, -0.3, 0), MeshUniqueId, _sprite_);
+			subjectSprite_array.push(_subjectSprite_)
+
+			var _sprite_ = createSprite("/static/img/sprite-group-2.png", 0.4, 'DOWN', 3, scene_)
+			_sprite_.cellIndex = 0;
+			_sprite_.compatibility = MeshUniqueId;
+			_sprite_.isVisible = false
+			_sprite_.isPickable = false
+			sprites_array.push(_sprite_)
+
+			var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(0.8, 0.3, 0), new BABYLON.Vector3(-0.8, -0.3, 0), MeshUniqueId, _sprite_);
+			subjectSprite_array.push(_subjectSprite_)
+
+			var _sprite_ = createSprite("/static/img/rotate180.png", 0.8, 'ROTATE180', 3, scene_)
+			_sprite_.cellIndex = 0;
+			_sprite_.compatibility = MeshUniqueId;
+			_sprite_.isVisible = false
+			_sprite_.isPickable = false
+			sprites_array.push(_sprite_)
+
+			var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(-0.4, 1.2, 0), new BABYLON.Vector3(0.4, -1.2, 0), MeshUniqueId, _sprite_);
+			subjectSprite_array.push(_subjectSprite_)
+
+			var _sprite_ = createSprite("/static/img/reflection.png", 0.45, 'REFLECTION', 3, scene_)
+			_sprite_.cellIndex = 0;
+			_sprite_.compatibility = MeshUniqueId;
+			_sprite_.isVisible = false
+			_sprite_.isPickable = false
+			sprites_array.push(_sprite_)
+
+			var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(0.5, 1.2, 0), new BABYLON.Vector3(-0.5, -1.2, 0), MeshUniqueId, _sprite_);
+			subjectSprite_array.push(_subjectSprite_)
+
+			_cil_.meshType = 'windowMesh';
+
+		}
+
+		if (element.getAttribute('type') === 'DefoltMesh') {
+
+			var _sprite_ = createSprite("/static/img/sprite-group-3.png", 0.4, 'LEFT', 3, scene_)
+			_sprite_.cellIndex = 0;
+			_sprite_.compatibility = MeshUniqueId;
+			_sprite_.isVisible = false
+			_sprite_.isPickable = false
+			sprites_array.push(_sprite_)
+
+			var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(-0.8, 0.3, 0), new BABYLON.Vector3(0.8, -0.3, 0), MeshUniqueId, _sprite_);
+			subjectSprite_array.push(_subjectSprite_)
+
+			var _sprite_ = createSprite("/static/img/sprite-group-3.png", 0.4, 'RIGHT', 3, scene_)
+			_sprite_.cellIndex = 1;
+			_sprite_.compatibility = MeshUniqueId;
+			_sprite_.isVisible = false
+			_sprite_.isPickable = false
+			sprites_array.push(_sprite_)
+
+			var _subjectSprite_ = createSubjectSprite(_cil_, new BABYLON.Vector3(0.8, 0.3, 0), new BABYLON.Vector3(-0.8, -0.3, 0), MeshUniqueId, _sprite_);
+			subjectSprite_array.push(_subjectSprite_)
+
+			_cil_.meshType = 'defoltMesh';
+
+		}
+
+		BABYLON.SceneLoader.ImportMesh("", "", "/static/models/GLTF/window/wiindow.gltf", scene_, function (meshes) {
+			_cil_.immovablePermission = true;
+			meshes[0].id = MeshUniqueId;
+			meshes[0].scaling.x = 1;
+			meshes[0].position = _cil_.position;
+			meshes[0].rotationQuaternion = BABYLON.Quaternion.FromEulerVector(_cil_.rotation);
+			model_array.push(meshes[0]);
+		});
+
+		_cil_.id = MeshUniqueId;
+		subtract_array.push(_cil_);
+
+		});
+	});
 
 	scene_.onBeforeRenderObservable.add(() => {
 		for(let i = 0; i < subjectSprite_array.length; i++){
@@ -161,6 +275,21 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			subjectSprite_array[i].lookAt(subjectSprite_array[i].position.add(direction), 0, 0, Math.PI);
 		}
 	});
+
+//// Определите ваши векторы
+//var points = [
+//    new BABYLON.Vector3(2.7079197532800516, 0, -1.2348297938517896),
+//    new BABYLON.Vector3(0.5291493643713299, 0, -4.330084637558449),
+//    new BABYLON.Vector3(-2.5684301510665906, 0, -2.315364923011175),
+//    new BABYLON.Vector3(-2.8364035726129435, 0, 1.9573119895566014),
+//    new BABYLON.Vector3(0.4390909113311796, 0, 2.8940252248111586),
+//    new BABYLON.Vector3(2.0085391251048095, 0, 2.3083737282011456),
+//    new BABYLON.Vector3(2.7079197532800516, 0, -1.2348297938517896), // Чтобы замкнуть многоугольник
+//];
+//
+//// Создайте плоскость (многоугольник) с использованием ваших точек
+//var polygon = BABYLON.MeshBuilder.CreatePolygon("plane", { shape: points }, scene);
+//polygon.material = doubleFaceMaterial_
 
 	/// TEST--- ///
 	
@@ -193,15 +322,27 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 					pickValidator = false;
 
-					pickMesh.pickedMesh.dispose();
+					target_compatibility = sprites_array[i].compatibility
+
 					sprites_array[i].dispose();
 
-					removeItemFromArray(subtract_array, pickMesh.pickedMesh)
 					removeItemFromArray(sprites_array, sprites_array[i])
 
 					i = i - 1;
 
 					createSubtractMesh(blueMaterial_, redMaterial_);
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+
+					subtract_array[i].dispose();
+					removeItemFromArray(subtract_array, subtract_array[i])
+
+					model_array[i].dispose();
+					removeItemFromArray(model_array, model_array[i])
 
 				}
 			}
@@ -220,25 +361,177 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 
 		}
 
-		if(pickValidator == true){
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'UP'){
+			
+			movingOptions.permission = true;
+			movingOptions.isMovingUp = true;
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickValidator = false;
+
+					target_compatibility = sprites_array[i].compatibility
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+					targetMesh = subtract_array[i]
+					targetModel = model_array[i]
+				}
+			}
+
+		}
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'DOWN'){
+			
+			movingOptions.permission = true;
+			movingOptions.isMovingDown = true;
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickValidator = false;
+
+					target_compatibility = sprites_array[i].compatibility
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+					targetMesh = subtract_array[i]
+					targetModel = model_array[i]
+				}
+			}
+
+		}
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'LEFT'){
+			
+			movingOptions.permission = true;
+			movingOptions.isRotateLeft = true;
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickValidator = false;
+
+					target_compatibility = sprites_array[i].compatibility
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+					targetMesh = subtract_array[i]
+					targetModel = model_array[i]
+				}
+			}
+
+		}
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'RIGHT'){
+			
+			movingOptions.permission = true;
+			movingOptions.isRotateRight = true;
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickValidator = false;
+
+					target_compatibility = sprites_array[i].compatibility
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+					targetMesh = subtract_array[i]
+					targetModel = model_array[i]
+				}
+			}
+
+		}
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'ROTATE180'){
+
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickValidator = false;
+
+					target_compatibility = sprites_array[i].compatibility
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+
+					subtract_array[i].rotation.y += Math.PI; // Углы Эйлера
+
+					model_array[i].rotationQuaternion = BABYLON.Quaternion.FromEulerVector(subtract_array[i].rotation);
+
+				}
+			}
+
+		}
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'REFLECTION'){
+
+			for(let i = 0; i < sprites_array.length; i++){
+				if(sprites_array[i].compatibility == pickSprite.pickedSprite.compatibility){
+
+					pickValidator = false;
+
+					target_compatibility = sprites_array[i].compatibility
+
+				}
+			}
+
+			for(let i = 0; i < subtract_array.length; i++){
+				if(subtract_array[i].id == target_compatibility){
+
+					model_array[i].scaling.x = -(model_array[i].scaling.x);
+
+				}
+			}
+
+		}
+
+		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'END FLOOR'){
+
+			console.log(testARR)
+			const newGeometry = BABYLON.MeshBuilder.CreateRibbon("ribbon", { pathArray: [testARR] }, scene_);
+            newGeometry.position.y = 0.01; // Немного поднимаем над плоскостью
+			newGeometry.material = doubleFaceMaterial_
+
+			testSprite.isVisible = false;
+			testSprite.isPickable = false;
+			testSprite.dispose();
+
+			endingOptions.FloorCreateValidator = false
+			floor_click_counter = 0;
+
+		}
+
+		if(pickValidator == true && pickMesh.pickedMesh){
+			if(pickMesh.pickedMesh.testValue < 2){
+				pickMesh.pickedMesh.testValue += 1;
+			}
+
 			for(let i = 0; i < sprites_array.length; i++){
 				if(sprites_array[i].compatibility == pickMesh.pickedMesh.id){
-
-					if(pickMesh.pickedMesh.testValue < 4){
-						pickMesh.pickedMesh.testValue += 1;
-					}
-
 					// Скрыть спрайт
 					sprites_array[i].isVisible = true;
-	
+
 					// Отключить реакцию на события
 					sprites_array[i].isPickable = true;
-
-					if(pickMesh.pickedMesh.testValue == 4){
-						pickMesh.pickedMesh.immovable = false;
-					}
-	
 				}
+			}
+
+			if(pickMesh.pickedMesh.testValue == 2){
+				pickMesh.pickedMesh.immovable = false;
 			}
 		}
 
@@ -254,8 +547,8 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		if (pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.BegEnd === 'start' && endingOptions.WallCreateValidator == true) {
 			targetMesh = pickSprite.pickedSprite; // присваиваем к переменной targetMesh значение кликнутого меша точки стены
 			targetValCombination = pickSprite.pickedSprite.ValCombination.combination; // потсваиваем к переменной targetValCombination точки соответствия
-			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
-			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
+			wall_click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
+			wall_points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
 			// Получаем координаты нажатия
 			endingOptions.PointValidator = 'MAIN';
@@ -270,35 +563,171 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		}
 		pickSprite = 0;
 		pickValidator = true;
+
+		if(pickMesh.pickedMesh && pickMesh.pickedMesh != plane_ && pickMesh.pickedMesh.immovable != true) {
+
+			currentMesh = pickMesh.pickedMesh;
+        	startingPoint = getGroundPosition(plane_);
+        	if (startingPoint) { // we need to disconnect camera from canvas
+        	    setTimeout(function () {
+        	        camera_.detachControl(canvas_);
+        	    }, 0);
+        	}
+
+		}
+
 	};
+
+	scene_.onPointerUp = function () {
+
+		movingOptions.permission = false;
+		movingOptions.isMovingUp = false;
+		movingOptions.isMovingDown = false;
+		movingOptions.isRotateLeft = false;
+		movingOptions.isRotateRight = false;
+		
+		if(targetMesh){
+			for(let i = 0; i < subjectSprite_array.length; i++){
+				if(subjectSprite_array[i].compatibility == targetMesh.id){
+
+					subjectSprite_array[i].position.y = targetMesh.position.y + subjectSprite_array[i].positionProperty.y //targetMesh.sizeProperty.height / 2
+
+				}
+			}
+		}
+
+		//&& targetMesh.testValue_ == "windowType"
+		if (startingPoint) {
+
+			createSubtractMesh(blueMaterial_, redMaterial_);
+			
+			for(let i = 0; i < subjectSprite_array.length; i++){
+				if(subjectSprite_array[i].compatibility == currentMesh.id){
+					subjectSprite_array[i].position.x = (currentMesh.position.x + subjectSprite_array[i].positionProperty.x)
+					subjectSprite_array[i].position.y = (currentMesh.position.y + subjectSprite_array[i].positionProperty.y)
+					subjectSprite_array[i].position.z = (currentMesh.position.z + subjectSprite_array[i].positionProperty.z)
+				}
+			}
+
+            camera_.attachControl(canvas_, true);
+            startingPoint = null;
+            return;
+        }
+	}
+
+	scene_.onPointerMove = function () {
+
+		if (!startingPoint) {
+            return;
+        }
+        var current = getGroundPosition(plane_);
+        if (!current) {
+            return;
+        }
+		if(!currentMesh || currentMesh.immovablePermission == undefined){
+			return;
+		}
+
+        var diff = current.subtract(startingPoint);
+        currentMesh.position.addInPlace(diff);
+
+        startingPoint = current;
+
+		for(let i = 0; i < model_array.length; i++){
+			if(model_array[i].id == currentMesh.id){
+				model_array[i].position = currentMesh.position
+			}
+		}
+
+	}
+
+	scene_.onBeforeRenderObservable.add(() => {
+		if (movingOptions.permission == true) {
+			if (movingOptions.isMovingUp == true) {
+				speedUp += acceleration;
+				if (speedUp > maxSpeed) speedUp = maxSpeed; // Ограничиваем скорость
+				targetMesh.position.y += speedUp;
+			} else {
+				speedUp = 0;
+			}
+	
+			if (movingOptions.isMovingDown == true) {
+				speedDown += acceleration;
+				if (speedDown > maxSpeed) speedDown = maxSpeed; // Ограничиваем скорость
+				targetMesh.position.y -= speedDown;
+			} else {
+				speedDown = 0;
+			}
+	
+			if (movingOptions.isRotateLeft == true) {
+				speedLeft += acceleration;
+				if (speedLeft > maxSpeed) speedLeft = maxSpeed; // Ограничиваем скорость
+				targetMesh.rotation.y += speedLeft;
+			} else {
+				speedLeft = 0;
+			}
+	
+			if (movingOptions.isRotateRight == true) {
+				speedRight += acceleration;
+				if (speedRight > maxSpeed) speedRight = maxSpeed; // Ограничиваем скорость
+				targetMesh.rotation.y -= speedRight;
+			} else {
+				speedRight = 0;
+			}
+	
+			// Update targetModel to match targetMesh
+			targetModel.position.y = targetMesh.position.y;
+			targetModel.rotationQuaternion = BABYLON.Quaternion.FromEulerVector(targetMesh.rotation);
+		} else {
+			speedUp = 0;
+			speedDown = 0;
+			speedLeft = 0;
+			speedRight = 0;
+		}
+	});
 	
 	planeActionManager = new BABYLON.ActionManager(scene_);
 	plane_.actionManager = planeActionManager;
 	planeActionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function (evt) {
-		if(endingOptions.WallCreateValidator == true){
-			click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
-			points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
-			// Получаем координаты нажатия
-			pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY);
-			pickInfo.pickedPoint.y = 0;
-			position = pickInfo.pickedPoint;
+		// Получаем координаты нажатия
+		pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY);
+		pickInfo.pickedPoint.y = 0;
+		position = pickInfo.pickedPoint;
+
+		if(endingOptions.FloorCreateValidator == true){
+			floor_click_counter += 1;
+			if(floor_click_counter == 1){
+				testSprite = createSprite("/static/img/sprite-group-1.png", 0.4, 'END FLOOR', 3, scene_)
+				testSprite.cellIndex = 0;
+				testSprite.isVisible = true
+				testSprite.isPickable = true
+				
+				
+			}
+			testARR.push(position)
+			testSprite.position = position
+		}
+
+		if(endingOptions.WallCreateValidator == true){
+			wall_click_counter += 1; // увеличиваем количество общих кликов локальной конструкции на 1
+			wall_points_counter += 1; // увеличиваем количество кликов локальной конструкции на 1
 
 			check_markPosition = pickInfo.pickedPoint
 
 			//отделил createSprite по той причине, что создание спрайта ендинга должно быть до создания базового спрайта стены, иначе базовый спрайт будет поверх ендинга
-			if(points_counter == 2){
+			if(wall_points_counter == 2){
 				check_mark = createSprite("/static/img/check_mark.png", 0.4, 'ENDING', 2, scene_);
 			}
 
 			endingOptions.PointValidator = 'MAIN';
 			createPoint(position, redMaterial_)
 
-			if(points_counter == 2){
+			if(wall_points_counter == 2){
 				creating(0, 1); 
 			}
 
-			if(points_counter >= 3){
+			if(wall_points_counter >= 3){
 				creating(1, 2);
 			}
 
@@ -309,7 +738,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 	}));
 
 	function creating(val1, val2){
-		if(points_counter >=4){
+		if(wall_points_counter >=4){
 			endPoints = []; // обнуление самых дальних точек линий(EndPoints)
 			points_array_.shift(); // удаление из массива первой точки, чтобы соблюдать технологию, при которой идёт смещение: 1 - 2 - 3; 1 - 2 - 3 - 4; (удаление первого) 2 - 3 - 4;
 			lines_array_.shift(); // аналогичная ситуация как с points_array_ но уже для линий по бокам
@@ -319,7 +748,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			SideWallMesh_array_.shift();
 		}
 
-		if(points_counter >=3){
+		if(wall_points_counter >=3){
 			LinePointsO_arr = []; // обнуление точек перпендикуляров
 			LinePointsT_arr = []; // обнуление точек перпендикуляров
 			WallMesh_array_[0].dispose();
@@ -365,7 +794,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		createLine(LinePointsO_arr[0].x, LinePointsO_arr[0].z, LinePointsO_arr[1].x, LinePointsO_arr[1].z) // создаём линию по первой и последней точке, беря данные из LinePointsO_arr и LinePointsT_arr
 		createLine(LinePointsT_arr[0].x, LinePointsT_arr[0].z, LinePointsT_arr[1].x, LinePointsT_arr[1].z) // создаём линию по первой и последней точке, беря данные из LinePointsO_arr и LinePointsT_arr
 
-		if(points_counter == 2){
+		if(wall_points_counter == 2){
 			setDataLines(0, 1, 0, 1)
 
 			//запускаем проверку массива points_array на поиск элемента с ID как у points_array_[1] и если мы его находит - то присваиваем к element значение аттрибута PointPositionWC 
@@ -381,7 +810,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 			createSideWall(1)
 		}
 
-		if(points_counter >= 3){
+		if(wall_points_counter >= 3){
 			setDataLines(2, 3, 1, 2)
 
 			// Задаем точку, от которой будем искать самую дальнюю точку
@@ -532,7 +961,7 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 					SideWallMesh_array.splice(target_Index, 0, target_Elem);
 				}
 
-				click_counter -= 1;
+				wall_click_counter -= 1;
 
 				valueEndPointConstruction = SideWallMesh_array.length
 			}
@@ -663,77 +1092,6 @@ function builder(canvas_, scene_, camera_, plane_, redMaterial_, blueMaterial_, 
 		}
 	});
 
-	var getGroundPosition = function () {
-        pickInfo = scene_.pick(scene_.pointerX, scene_.pointerY, function (mesh) { return mesh == plane_; });
-        if (pickInfo.hit) {
-            return pickInfo.pickedPoint;
-        }
-
-        return null;
-    }
-
-    var pointerDown = function (mesh) {
-        currentMesh = mesh;
-        startingPoint = getGroundPosition();
-        if (startingPoint) { // we need to disconnect camera from canvas
-            setTimeout(function () {
-                camera_.detachControl(canvas_);
-            }, 0);
-        }
-    }
-
-    var pointerUp = function () {
-        if (startingPoint) {
-
-			createSubtractMesh(blueMaterial_, redMaterial_);
-			
-			for(let i = 0; i < subjectSprite_array.length; i++){
-				if(subjectSprite_array[i].compatibility == currentMesh.id){
-					subjectSprite_array[i].position.x = (currentMesh.position.x + subjectSprite_array[i].positionProperty.x)
-					subjectSprite_array[i].position.y = (currentMesh.position.y + subjectSprite_array[i].positionProperty.y)
-					subjectSprite_array[i].position.z = (currentMesh.position.z + subjectSprite_array[i].positionProperty.z)
-				}
-			}
-
-            camera_.attachControl(canvas_, true);
-            startingPoint = null;
-            return;
-        }
-    }
-
-    var pointerMove = function () {
-        if (!startingPoint) {
-            return;
-        }
-        var current = getGroundPosition();
-        if (!current) {
-            return;
-        }
-
-        var diff = current.subtract(startingPoint);
-        currentMesh.position.addInPlace(diff);
-
-        startingPoint = current;
-
-    }
-
-    scene_.onPointerObservable.add((pointerInfo) => {     
-        switch (pointerInfo.type) {
-			case BABYLON.PointerEventTypes.POINTERDOWN:
-				if(pointerInfo.pickInfo.hit && pointerInfo.pickInfo.pickedMesh != plane_ && pointerInfo.pickInfo.pickedMesh.immovable != true) {
-					
-                    pointerDown(pointerInfo.pickInfo.pickedMesh)
-                }
-				break;
-			case BABYLON.PointerEventTypes.POINTERUP:
-                    pointerUp();
-				break;
-			case BABYLON.PointerEventTypes.POINTERMOVE:          
-                    pointerMove();
-				break;
-        }
-    });
-
 }
 
 function createPoint(position_, material_){
@@ -754,7 +1112,7 @@ function createPoint(position_, material_){
 		}
 
 		wallPoint.id = MeshUniqueId; // присваиваем ID сфере
-		wallPoint.ValCombination = { combination: click_counter };
+		wallPoint.ValCombination = { combination: wall_click_counter };
 
 		points_array.push(wallPoint) // пуш в массив всех points
 		points_array_.push(wallPoint) // пуш в массив последних трёх points для вычисления перпендикуляров и пересечений
@@ -1022,7 +1380,7 @@ function updateSpriteSize(obj, factor, camera_, minVal, maxVal) {
 }
 
 function resetWallSettings(){
-	points_counter = 0;
+	wall_points_counter = 0;
 	points_array_ = [];
 	lines_array_ = [];
 	WallMesh_array_ = [];
@@ -1040,10 +1398,11 @@ function createSubtractMesh(mat1, mat2){
 	for(let j = 0; j < SideWallMesh_array.length; j++){
 		for(let i = 0; i < subtract_array.length; i++){
 			trianglePoints = [];
-			if (SideWallMesh_array[j].intersectsMesh(subtract_array[i], true)) {
-	
+			if ((SideWallMesh_array[j].intersectsMesh(subtract_array[i], true) && subtract_array[i].meshType == 'windowMesh')) {
+
 				subtract_array[i].scaling.z = (SideWallMesh_array[j].depth * 2) + 0.2
 				subtract_array[i].rotation.y = SideWallMesh_array[j].rotation.y
+				model_array[i].rotationQuaternion = BABYLON.Quaternion.FromEulerVector(subtract_array[i].rotation);
 	
 				trianglePoints.push(points_array[lines_array[j].ValCombination.value[0].combination - 1].position) // начало линии
 				trianglePoints.push(points_array[lines_array[j].ValCombination.value[1].combination - 1].position) // окончание линии
@@ -1053,7 +1412,8 @@ function createSubtractMesh(mat1, mat2){
 				distance = diffVector.length();
 				dotProduct = BABYLON.Vector3.Dot(trianglePoints[2].subtract(trianglePoints[0]), diffVector) / distance;
 				position = trianglePoints[0].add(diffVector.scale(dotProduct / distance));
-				subtract_array[i].position = position
+				subtract_array[i].position.x = position.x
+				subtract_array[i].position.z = position.z
 	
 			}
 		}
@@ -1096,13 +1456,15 @@ function createSubtractMesh(mat1, mat2){
 
 				for(let i = 0; i < subtract_array.length; i++){
 
-					if (SideWallMesh_array[j].intersectsMesh(subtract_array[i], true)) {
-						SideWallMesh_array[j].metadata.intersected.push(subtract_array[i])
-						
-					}
+					if(subtract_array[i].meshType == 'windowMesh'){
+						if (SideWallMesh_array[j].intersectsMesh(subtract_array[i], true)) {
+							SideWallMesh_array[j].metadata.intersected.push(subtract_array[i])
 
-					var meshCSG = BABYLON.CSG.FromMesh(subtract_array[i]);
-					SideWallMesh_array[j].resultCSG = SideWallMesh_array[j].resultCSG.subtract(meshCSG);
+						}
+
+						var meshCSG = BABYLON.CSG.FromMesh(subtract_array[i]);
+						SideWallMesh_array[j].resultCSG = SideWallMesh_array[j].resultCSG.subtract(meshCSG);
+					}
 
 				}
 
@@ -1139,6 +1501,16 @@ function createSubjectSprite(arr_, positionProperty_, pivotSettings_, compatibil
 	box.setPivotPoint(pivotSettings_);
 	sprite_.position = box.getAbsolutePosition()
 	return box;
+}
+
+//функция получения позиции при нажатии по plane, либо ведения по плоскости меша
+var getGroundPosition = function (plane_) {
+	pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh == plane_; });
+	if (pickInfo.hit) {
+		return pickInfo.pickedPoint;
+	}
+
+	return null;
 }
 
 //-------------- TEST SEGMENT --------------//

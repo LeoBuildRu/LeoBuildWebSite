@@ -23,10 +23,13 @@
 </head>
 <body class="scroller-ziro">
     <button class="absolute left-0 top-0 w-36 h-12 mt-16 ml-8 bg-white text-center" id="CreateWall">CREATE WALL</button>
+    <button class="absolute left-0 top-0 w-36 h-12 mt-32 ml-8 bg-white text-center CreateCill" type="WindowMesh">CREATE WIN</button>
+    <button class="absolute left-0 top-0 w-36 h-12 mt-48 ml-8 bg-white text-center CreateCill" type="DefoltMesh">CREATE DEF</button>
+    <button class="absolute left-0 top-0 w-36 h-12 mt-64 ml-8 bg-white text-center" id="CreateFloor">CREATE FLOR</button>
     <canvas id="renderCanvas"></canvas>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="{% static '/node_modules/babylonjs/babylon.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/earcut"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
     <script type="module" src="{% static '/js/builder.js' %}"></script>
 
 </body>
