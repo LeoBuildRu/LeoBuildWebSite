@@ -276,21 +276,6 @@ function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMat
 		}
 	});
 
-//// Определите ваши векторы
-//var points = [
-//    new BABYLON.Vector3(2.7079197532800516, 0, -1.2348297938517896),
-//    new BABYLON.Vector3(0.5291493643713299, 0, -4.330084637558449),
-//    new BABYLON.Vector3(-2.5684301510665906, 0, -2.315364923011175),
-//    new BABYLON.Vector3(-2.8364035726129435, 0, 1.9573119895566014),
-//    new BABYLON.Vector3(0.4390909113311796, 0, 2.8940252248111586),
-//    new BABYLON.Vector3(2.0085391251048095, 0, 2.3083737282011456),
-//    new BABYLON.Vector3(2.7079197532800516, 0, -1.2348297938517896), // Чтобы замкнуть многоугольник
-//];
-//
-//// Создайте плоскость (многоугольник) с использованием ваших точек
-//var polygon = BABYLON.MeshBuilder.CreatePolygon("plane", { shape: points }, scene);
-//polygon.material = doubleFaceMaterial_
-
 	/// TEST--- ///
 	
 	scene_.onPointerDown = function (event, pickResult, pickSprite, pickMesh) {
@@ -501,10 +486,8 @@ function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMat
 
 		if(pickSprite && pickSprite.pickedSprite && pickSprite.pickedSprite.property == 'END FLOOR'){
 
-			console.log(testARR)
-			const newGeometry = BABYLON.MeshBuilder.CreateRibbon("ribbon", { pathArray: [testARR] }, scene_);
-            newGeometry.position.y = 0.01; // Немного поднимаем над плоскостью
-			newGeometry.material = doubleFaceMaterial_
+			var polygon = BABYLON.MeshBuilder.CreatePolygon("plane", { shape: testARR }, scene_);
+			polygon.material = doubleFaceMaterial_
 
 			testSprite.isVisible = false;
 			testSprite.isPickable = false;
@@ -512,27 +495,30 @@ function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMat
 
 			endingOptions.FloorCreateValidator = false
 			floor_click_counter = 0;
+			testARR = [];
 
 		}
 
-		if(pickValidator == true && pickMesh.pickedMesh){
-			if(pickMesh.pickedMesh.testValue < 2){
+		if (pickValidator && pickMesh.pickedMesh) {		
+			// Увеличиваем значение testValue, если оно меньше 2
+			if (pickMesh.pickedMesh.testValue < 2) {
 				pickMesh.pickedMesh.testValue += 1;
 			}
-
-			for(let i = 0; i < sprites_array.length; i++){
-				if(sprites_array[i].compatibility == pickMesh.pickedMesh.id){
-					// Скрыть спрайт
-					sprites_array[i].isVisible = true;
-
-					// Отключить реакцию на события
-					sprites_array[i].isPickable = true;
+		
+			// Найти совместимые спрайты и сделать их видимыми и кликабельными
+			sprites_array.forEach(sprite => {
+				if (sprite.compatibility === pickMesh.pickedMesh.id) {
+					sprite.isVisible = true;
+					sprite.isPickable = true;
 				}
-			}
-
-			if(pickMesh.pickedMesh.testValue == 2){
+			});
+		
+			// Разблокируем mesh, если testValue равно 2
+			if (pickMesh.pickedMesh.testValue === 2) {
 				pickMesh.pickedMesh.immovable = false;
 			}
+		} else if (!pickValidator && pickMesh.pickedMesh) {
+			pickMesh.pickedMesh.immovable = true;
 		}
 
 		// проверяем, если спрайт действительно есть - запускаем процесс ресета настроек стен и удаления спрайта
@@ -578,7 +564,20 @@ function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMat
 
 	};
 
-	scene_.onPointerUp = function () {
+	scene_.onPointerUp = function () {	
+		
+		if(startingPoint || movingOptions.isMovingUp == true || movingOptions.isMovingDown == true){
+			createSubtractMesh(blueMaterial_, redMaterial_);
+			for(let i = 0; i < subjectSprite_array.length; i++){
+				if(subjectSprite_array[i].compatibility == currentMesh.id){
+					subjectSprite_array[i].position.x = (currentMesh.position.x + subjectSprite_array[i].positionProperty.x)
+					subjectSprite_array[i].position.y = (currentMesh.position.y + subjectSprite_array[i].positionProperty.y)
+					subjectSprite_array[i].position.z = (currentMesh.position.z + subjectSprite_array[i].positionProperty.z)
+				}
+			}
+			camera_.attachControl(canvas_, true);
+        	startingPoint = null;
+		}
 
 		movingOptions.permission = false;
 		movingOptions.isMovingUp = false;
@@ -595,24 +594,6 @@ function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMat
 				}
 			}
 		}
-
-		//&& targetMesh.testValue_ == "windowType"
-		if (startingPoint) {
-
-			createSubtractMesh(blueMaterial_, redMaterial_);
-			
-			for(let i = 0; i < subjectSprite_array.length; i++){
-				if(subjectSprite_array[i].compatibility == currentMesh.id){
-					subjectSprite_array[i].position.x = (currentMesh.position.x + subjectSprite_array[i].positionProperty.x)
-					subjectSprite_array[i].position.y = (currentMesh.position.y + subjectSprite_array[i].positionProperty.y)
-					subjectSprite_array[i].position.z = (currentMesh.position.z + subjectSprite_array[i].positionProperty.z)
-				}
-			}
-
-            camera_.attachControl(canvas_, true);
-            startingPoint = null;
-            return;
-        }
 	}
 
 	scene_.onPointerMove = function () {
@@ -1537,9 +1518,9 @@ function generateRandomColor() {
 }
 
 var scene = createScene();
-engine.runRenderLoop(function() {
-	scene.render();
-});
 window.addEventListener("resize", function() {
 	engine.resize();
+});
+engine.runRenderLoop(function() {
+	scene.render();
 });

@@ -11,39 +11,58 @@ export function ExportSceneSettings(canvas_, engine_, scene_, camera_, light_, p
 	plane_material_.diffuseTexture.hasAlpha = true;
 	plane_material_.backFaceCulling = false;
 	plane_.material = plane_material_;
-	// Создание 2D камеры вида сверху
-	camera_ = new BABYLON.ArcRotateCamera("camera", 13, 0.5, 10, BABYLON.Vector3.Zero(), scene_);
-    camera_.setTarget(BABYLON.Vector3.Zero());
+
+	// Create the ArcRotateCamera
+    camera_ = new BABYLON.ArcRotateCamera("camera", 13, 0.5, 10, BABYLON.Vector3.Zero(), scene_);
     camera_.attachControl(canvas_, true);
-    camera_.minZ = -100
-    camera_.maxZ = 1000
-    camera_.wheelDeltaPercentage = 0.01
+    camera_.wheelDeltaPercentage = 0.01;
+    camera_.lowerBetaLimit = 0;
+    camera_.upperBetaLimit = Math.PI / 2.1;
 
-    // ORTHO setup
+    // Устанавливаем общие параметры для обеих камер
+    const setCommonCameraParams = () => {
+        camera_.minZ = -100;
+        camera_.maxZ = 1000;
+    };
 
-    //camera_.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA
-    //camera_.orthoLeft = -10
-    //camera_.orthoRight = 10
+    // Set the scene's initial camera mode to perspective
+    camera_.mode = BABYLON.Camera.PERSPECTIVE_CAMERA;
+    setCommonCameraParams();
 
-	const setOrthoCameraTopBottom = (camera, ratio) => {
-		camera.orthoTop = camera.orthoRight * ratio
-		camera.orthoBottom = camera.orthoLeft * ratio
-	}
+    // Function to set ortho camera parameters
+    const setOrthoCameraParams = () => {
+        const ratio = canvas_.height / canvas_.width;
+        camera_.orthoLeft = -10 * camera_.radius / 10;
+        camera_.orthoRight = 10 * camera_.radius / 10;
+        camera_.orthoTop = camera_.orthoRight * ratio;
+        camera_.orthoBottom = camera_.orthoLeft * ratio;
+    }
 
-    // needed to calculate orthoTop and orthoBottom without distortion
-    const ratio = canvas_.height / canvas_.width
-    setOrthoCameraTopBottom(camera_, ratio)
+    document.getElementById('ChageTo2D').addEventListener('click', (e)=> {
+        camera_.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+        setOrthoCameraParams();
+        setCommonCameraParams();
+    });
 
-    let oldRadius = camera_.radius
+    document.getElementById('ChageTo3D').addEventListener('click', (e)=> {
+        camera_.mode = BABYLON.Camera.PERSPECTIVE_CAMERA;
+        setCommonCameraParams();
+    });
+
+    // Monitor changes in camera radius to update ortho params if needed
+    let oldRadius = camera_.radius;
     scene_.onBeforeRenderObservable.add(() => {
-        if (oldRadius !== camera_.radius) {
-            const radiusChangeRatio = camera_.radius / oldRadius
-            camera_.orthoLeft *= radiusChangeRatio
-            camera_.orthoRight *= radiusChangeRatio
-            oldRadius = camera_.radius
-            setOrthoCameraTopBottom(camera_, ratio)
+        if (camera_.target.y < 0) {
+            camera_.target.y = 0;
         }
-    })
+        if (camera_.position.y < 0) {
+            camera_.position.y = 0;
+        }
+        if (camera_.mode === BABYLON.Camera.ORTHOGRAPHIC_CAMERA && oldRadius !== camera_.radius) {
+            setOrthoCameraParams();
+            oldRadius = camera_.radius;
+        }
+    });
 
 	// Добавляем туман
 	const near_fog = 25;
