@@ -8,35 +8,115 @@
   <title>BabylonJS Rotating Cube</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body {
+    body, html {
+      width: 100%;
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
     }
 
-    canvas {
-      display: block; /* Убирает пробелы между элементами */
-      width: 100%;
-      height: 100%;
-      outline: 0;
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
     }
   </style>
 </head>
 <body class="">
-    <button class="absolute right-0 top-0 w-36 h-12 mt-16 mr-8 bg-white text-center" id="CreateWall">CREATE WALL</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-32 mr-8 bg-white text-center CreateCill" type="WindowMesh">CREATE WIN</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-48 mr-8 bg-white text-center CreateCill" type="DefoltMesh">CREATE DEF</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-64 mr-8 bg-white text-center" id="CreateFloor">CREATE FLOR</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-80 mr-8 bg-white text-center" id="ChageTo2D">2D CAMERA</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-96 mr-8 bg-white text-center" id="ChageTo3D">3D CAMERA</button>
-    <canvas id="renderCanvas"></canvas>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="{% static 'node_modules/babylonjs/babylon.js' %}"></script>
-    <script src="{% static 'node_modules/babylonjs-loaders/babylonjs.loaders.js' %}"></script>
-    <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
-    <script type="module" src="{% static '/js/builder.js' %}"></script>
+  
+  <div class="BackCircles w-full h-full fixed top-0 left-0 z-0"></div>
 
+  <script>
+    const container = document.querySelector('.BackCircles');
+    const colors = ['#d4d5f7', '#ceebee', '#f7edde', '#e4e5f9'];
+    const numberOfCircles = 50;
+
+    function interpolateColor(color1, color2, factor) {
+      const result = color1.slice();
+      for (let i = 0; i < 3; i++) {
+        result[i] = Math.round(result[i] + factor * (color2[i] - result[i]));
+      }
+      return `rgb(${result[0]}, ${result[1]}, ${result[2]})`;
+    }
+
+    function parseColor(color) {
+      return color.match(/\w\w/g).map(hex => parseInt(hex, 16));
+    }
+
+    for (let i = 0; i < numberOfCircles; i++) {
+      const circle = document.createElement('div');
+      circle.classList.add('circle');
+      container.appendChild(circle);
+
+      let size = Math.random() * (250 - 50) + 50;
+      let x, y;
+      const onEdge = Math.random() < 0.3; // 30% шанс создать круг на границе
+
+      if (onEdge) {
+        const edge = Math.random();
+        if (edge < 0.25) {
+          x = -size * 0.75;
+          y = Math.random() * window.innerHeight;
+        } else if (edge < 0.5) {
+          x = window.innerWidth - size * 0.25;
+          y = Math.random() * window.innerHeight;
+        } else if (edge < 0.75) {
+          x = Math.random() * window.innerWidth;
+          y = -size * 0.75;
+        } else {
+          x = Math.random() * window.innerWidth;
+          y = window.innerHeight - size * 0.25;
+        }
+      } else {
+        x = Math.random() * (window.innerWidth - size);
+        y = Math.random() * (window.innerHeight - size);
+      }
+
+      let dx = (Math.random() - 0.5) * 4;
+      let dy = (Math.random() - 0.5) * 4;
+      let dSize = (Math.random() - 0.5) * 2;
+      let colorIndex = Math.floor(Math.random() * colors.length);
+      let nextColorIndex = (colorIndex + 1) % colors.length;
+      let colorFactor = 0;
+
+      circle.style.width = `${size}px`;
+      circle.style.height = `${size}px`;
+      circle.style.left = `${x}px`;
+      circle.style.top = `${y}px`;
+
+      function animate() {
+        size += dSize;
+        if (size < 50 || size > 250) dSize = -dSize;
+
+        x += dx;
+        y += dy;
+
+        const maxOffset = size * 0.75;
+
+        if (x < -maxOffset || x + size - maxOffset > window.innerWidth) dx = -dx;
+        if (y < -maxOffset || y + size - maxOffset > window.innerHeight) dy = -dy;
+
+        circle.style.width = `${size}px`;
+        circle.style.height = `${size}px`;
+        circle.style.left = `${x}px`;
+        circle.style.top = `${y}px`;
+
+        colorFactor += 0.01;
+        if (colorFactor >= 1) {
+          colorFactor = 0;
+          colorIndex = nextColorIndex;
+          nextColorIndex = (colorIndex + 1) % colors.length;
+        }
+
+        const currentColor = parseColor(colors[colorIndex]);
+        const nextColor = parseColor(colors[nextColorIndex]);
+        const interpolatedColor = interpolateColor(currentColor, nextColor, colorFactor);
+        circle.style.backgroundColor = interpolatedColor;
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+  </script>
 </body>
 </html>
