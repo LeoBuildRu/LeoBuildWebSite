@@ -17,7 +17,7 @@
     .circle {
       position: absolute;
       border-radius: 50%;
-      filter: blur(70px);
+      filter: blur(150px);
     }
   </style>
 </head>
@@ -47,7 +47,7 @@
       circle.classList.add('circle');
       container.appendChild(circle);
 
-      let size = Math.random() * (250 - 50) + 50;
+      let size = Math.random() * (400 - 150) + 150;
       let x, y;
       const onEdge = Math.random() < 0.3; // 30% шанс создать круг на границе
 
@@ -71,8 +71,9 @@
         y = Math.random() * (window.innerHeight - size);
       }
 
-      let dx = (Math.random() - 0.5) * 4;
-      let dy = (Math.random() - 0.5) * 4;
+      let speedFactor = 0.01; // Это значение уменьшит скорость в 2 раза.
+      let dx = ((Math.random() - 0.5) * 4) * speedFactor;
+      let dy = ((Math.random() - 0.5) * 4) * speedFactor;
       let dSize = (Math.random() - 0.5) * 2;
       let colorIndex = Math.floor(Math.random() * colors.length);
       let nextColorIndex = (colorIndex + 1) % colors.length;
@@ -85,7 +86,7 @@
 
       function animate() {
         size += dSize;
-        if (size < 50 || size > 250) dSize = -dSize;
+        if (size < 150 || size > 400) dSize = -dSize;
 
         x += dx;
         y += dy;
