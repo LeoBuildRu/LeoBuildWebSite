@@ -1,0 +1,110 @@
+@font-face {
+    font-family: 'Jost-ExtraLight';
+    src: url('../fonts/Jost/Jost-ExtraLight.ttf') format('truetype');
+    font-weight: 200; /* ExtraLight */
+    font-style: normal;
+}
+
+/* Light */
+@font-face {
+    font-family: 'Jost-Light';
+    src: url('../fonts/Jost/Jost-Light.ttf') format('truetype');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+/* Regular */
+@font-face {
+    font-family: 'Jost-Regular';
+    src: url('../fonts/Jost/Jost-Regular.ttf') format('truetype');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+/* Medium */
+@font-face {
+    font-family: 'Jost-Medium';
+    src: url('../fonts/Jost/Jost-Medium.ttf') format('truetype');
+    font-weight: 500; /* Medium */
+    font-style: normal;
+}
+
+/* SemiBold */
+@font-face {
+    font-family: 'Jost-SemiBold';
+    src: url('../fonts/Jost/Jost-SemiBold.ttf') format('truetype');
+    font-weight: 600; /* SemiBold */
+    font-style: normal;
+}
+
+/* Bold */
+@font-face {
+    font-family: 'Jost-Bold';
+    src: url('../fonts/Jost/Jost-Bold.ttf') format('truetype');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* Extra Bold */
+@font-face {
+    font-family: 'Jost-ExtraBold';
+    src: url('../fonts/Jost/Jost-ExtraBold.ttf') format('truetype');
+    font-weight: 800; /* Extra Bold */
+    font-style: normal;
+}
+
+/* Black */
+@font-face {
+    font-family: 'Jost-Black';
+    src: url('../fonts/Jost/Jost-Black.ttf') format('truetype');
+    font-weight: 900; /* Black */
+    font-style: normal;
+}
+
+/* Regular */
+@font-face {
+    font-family: 'Rollfast-Regular';
+    src: url('../fonts/RollFast/Rollfast-Regular.ttf') format('truetype');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+/* Regular */
+@font-face {
+    font-family: 'Rollfast-Rounded';
+    src: url('../fonts/RollFast/Rollfast-Rounded.ttf') format('truetype');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+/* Black */
+@font-face {
+    font-family: 'Rollfast-Black';
+    src: url('../fonts/RollFast/Rollfast-Black.ttf') format('truetype');
+    font-weight: 900; /* Black */
+    font-style: normal;
+}
+
+/* Black */
+@font-face {
+    font-family: 'Rollfast-Rounded Black';
+    src: url('../fonts/RollFast/Rollfast-Rounded Black.ttf') format('truetype');
+    font-weight: 900; /* Black */
+    font-style: normal;
+}
+
+/* Bold */
+@font-face {
+    font-family: 'Arimo-Bold';
+    src: url('../fonts/Arimo/Arimo-Bold.ttf') format('truetype');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* BoldItalic */
+@font-face {
+    font-family: 'Arimo-BoldItalic';
+    src: url('../fonts/Arimo/Arimo-BoldItalic.ttf') format('truetype');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}

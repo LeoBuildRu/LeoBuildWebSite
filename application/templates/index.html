@@ -6,7 +6,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BabylonJS Rotating Cube</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
+  <link href="{% static 'fonts/font.css' %}" rel="stylesheet">
   <style>
     body, html {
       width: 100%;
@@ -21,14 +22,353 @@
     }
   </style>
 </head>
-<body class="">
+<body class="relative px-3 tablet-small:px-4 tablet:px-0">
   
+  <section class="flex relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] h-auto pt-3 tablet-small:pt-4 tablet:pt-10 desktop:pt-16 large-desktop:pt-24 mx-auto">
+    <div class="hidden laptop:block w-[540px] desktop:w-[570px] large-desktop:w-[620px] h-[50px] desktop:h-[55px] large-desktop:h-[60px] bg-white rounded-[15px]">
+      <div class="grid grid-cols-3">
+        <div class="w-full h-full">
+          <div class="flex w-min ml-[20px]">
+            <img src="{% static 'img/house.png' %}" class="w-[23px] desktop:w-[26px] large-desktop:w-[28px] h-[23px] desktop:h-[26px] large-desktop:h-[28px] mt-[14px]" alt="">
+            <div class="mt-[12px] ml-[16px] text-[20px] desktop:text-[22px] large-desktop:text-[24px] whitespace-nowrap font-['Jost-Medium'] tracking-[.05em]">ГЛАВНАЯ</div>
+          </div>
+        </div>
+        <div class="w-full h-full">
+          <div class="flex w-min ml-[5px]">
+            <img src="{% static 'img/design.png' %}" class="w-[23px] desktop:w-[26px] large-desktop:w-[28px] h-[23px] desktop:h-[26px] large-desktop:h-[28px] mt-[14px]" alt="">
+            <div class="mt-[12px] ml-[16px] text-[20px] desktop:text-[22px] large-desktop:text-[24px] whitespace-nowrap font-['Jost-Medium'] tracking-[.05em]">3D BUILDER</div>
+          </div>
+        </div>
+        <div class="w-full h-full">
+          <div class="flex w-min ml-[20px]">
+            <img src="{% static 'img/publication.png' %}" class="w-[23px] desktop:w-[26px] large-desktop:w-[28px] h-[23px] desktop:h-[26px] large-desktop:h-[28px] mt-[14px]" alt="">
+            <div class="mt-[12px] ml-[16px] text-[20px] desktop:text-[22px] large-desktop:text-[24px] whitespace-nowrap font-['Jost-Medium'] tracking-[.05em]">НОВОСТИ</div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3">
+        <div class="w-[calc(100%-44px)] large-desktop:w-[calc(100%-48px)] h-[3.5px] mt-[4px] desktop:mt-[6px] large-desktop:mt-[8px] ml-[20px] bg-[#51D5FF] opacity-[35%]"></div>
+        <div class="w-[calc(100%-24px)] desktop:w-[calc(100%-20px)] large-desktop:w-[calc(100%-22px)] h-[3.5px] mt-[4px] desktop:mt-[6px] large-desktop:mt-[8px] ml-[7px] bg-[#51D5FF] opacity-[0%]"></div>
+        <div class="w-[calc(100%-37px)] desktop:w-[calc(100%-35px)] large-desktop:w-[calc(100%-39px)] h-[3.5px] mt-[4px] desktop:mt-[6px] large-desktop:mt-[8px] ml-[20px] bg-[#51D5FF] opacity-[0%]"></div>
+      </div>
+    </div>
+    <div class="block laptop:hidden w-[45px] h-[42px] my-auto p-2 bg-white rounded-[8px]">
+      <img src="{% static 'img/burger.png' %}" alt="">
+    </div>
+    <div class="flex w-auto h-[50px] desktop:h-[55px] large-desktop:h-[60px] ml-auto">
+      <div class="flex">
+        <img src="{% static 'img/shopping-basket.png' %}" class="w-[38px] laptop:w-[40px] desktop:w-[44px] large-desktop:w-[48px] h-[35px] laptop:h-[38px] desktop:h-[42px] large-desktop:h-[44px] my-auto mr-[9px] laptop:mr-[27px] large-desktop:mr-[30px]" alt="">
+        <div class="flex absolute w-[17px] laptop:w-[22px] large-desktop:w-[24px] h-[17px] laptop:h-[22px] large-desktop:h-[24px] mt-[-0px] laptop:mt-[-2px] ml-[28px] large-desktop:ml-[36px] bg-black bg-opacity-70 rounded-[15px]">
+          <div class="ml-[4px] laptop:ml-[6px] mt-[-2px] text-[15px] laptop:text-[18px] large-desktop:text-[20px] text-white font-['Jost-SemiBold']">0</div>
+        </div>
+      </div>
+      <img src="{% static 'img/profile.png' %}" class="w-[38px] laptop:w-[40px] desktop:w-[42px] large-desktop:w-[44px] h-[36px] laptop:h-[40px] desktop:h-[42px] large-desktop:h-[44px] my-auto mr-[24px] laptop:mr-[37px] large-desktop:mr-[40px]" alt="">
+      <div class="flex w-[147px] laptop:w-[176px] large-desktop:w-[190px] h-[39px] laptop:h-[46px] desktop:h-[48px] large-desktop:h-[52px] my-auto bg-[#3E3E3E] rounded-[8px] laptop:rounded-[15px] shadow-[0px_5px_10px_2px_rgba(0,0,0,0.3)]">
+        <div class="mx-auto mt-[1px] laptop:mt-[2px] text-white text-[24px] laptop:text-[27px] desktop:text-[29px] large-desktop:text-[32px] font-['Rollfast-Rounded'] tracking-[.07em]">СОЗДАТЬ</div>
+        <img src="{% static 'img/stars.png' %}" class="absolute right-0 w-[34px] laptop:w-[40px] desktop:w-[44px] h-[34px] laptop:h-[40px] desktop:h-[44px] mt-[-10px] laptop:mt-[-16px] desktop:mt-[-20px] mr-[-10px] laptop:mr-[-14px] desktop:mr-[-18px]" alt="">
+      </div>
+    </div>
+  </section>
+
+  <section class="flex relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] h-auto mt-4 laptop:mt-12 desktop:mt-16 large-desktop:mt-24 mx-auto">
+    <div class="relative z-10 w-full">
+      <div class="w-full tablet:w-min bg-white mt-0 laptop:mt-6 desktop:mt-10 pt-[4px] pl-[8px] tablet-small:pl-[16px] tablet:pr-[72px] desktop:pr-[96px] rounded-tl-[14px] laptop:rounded-tl-[20px] rounded-tr-[14px] laptop:rounded-tr-[20px] rounded-br-[14px] laptop:rounded-br-[20px]">
+        <div class="text-[34px] tablet-small:text-[36px] tablet:text-[42px] laptop:text-[48px] desktop:text-[55px] large-desktop:text-[60px] text-white whitespace-nowrap font-['Jost-ExtraBold'] tracking-[0.13rem] tablet-small:tracking-[0.25rem]" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, 1px 1px 0 #000, 1px 1px 0 #000;">ПОСТРОЙ СВОЮ</div>
+      </div>
+      <div class="flex -mt-1 tablet:mt-0">
+        <div class="w-min bg-white pl-[8px] tablet-small:pl-[16px] pr-[46px] desktop:pr-[72px] large-desktop:pr-[96px] rounded-br-[14px] laptop:rounded-br-[20px]">
+          <div class="-mt-2 tablet:-mt-4 text-[34px] tablet-small:text-[36px] tablet:text-[42px] laptop:text-[48px] desktop:text-[55px] large-desktop:text-[60px] text-black font-['Jost-ExtraBold'] tracking-[0.13rem] tablet-small:tracking-[0.25rem]">МЕЧТУ</div>
+        </div>
+        <img src="{% static 'img/angle.png' %}" alt="" class="w-[34px] tablet:w-[44px] desktop:w-[54px] large-desktop:w-[74px] h-[34px] tablet:h-[44px] desktop:h-[54px] large-desktop:h-[74px] mt-[3px] tablet:-mt-[3px] -ml-[2px]">
+      </div>
+      <div class="hidden laptop:block w-[400px] desktop:w-[470px] large-desktop:w-[510px] mt-8 desktop:mt-10 py-[8px] large-desktop:py-[16px] px-4 desktop:px-[36px] border-t-[2px] border-b-[2px] border-black border-opacity-10 text-center">
+        <div class="text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-['Jost-Medium'] leading-[1.7rem] desktop:leading-[2.2rem] tracking-[0.075rem] opacity-80">Откройте для себя LeoBuild – умный инструмент для планировки вашего интерьера.</div>
+      </div>
+      <div class="relative w-full laptop:w-[350px] desktop:w-[420px] large-desktop:w-[460px] mt-[235px] tablet-small:mt-[270px] tablet:mt-[260px] laptop:mt-8 desktop:mt-12 py-1 px-1 border-[3px] border-white rounded-[16px]">
+        <img src="{% static 'img/main-page-photo-2.png' %}" alt="" class="absolute z-0 top-0 left-0 w-full h-full rounded-[12px]">
+        <div class="w-min px-3 py-0.5 tablet-small:py-1 tablet:py-0 bg-white bg-opacity-50 rounded-[12px] backdrop-blur-sm">
+          <div class="relative z-10 pl-[0px] tablet-small:pl-[12px] pr-[16px] large-desktop:pr-[48px] text-[24px] tablet-small:text-[26px] tablet:text-[22px] desktop:text-[26px] large-desktop:text-[28px] text-[#000] text-opacity-50 font-['Jost-Bold'] whitespace-nowrap tracking-[0.05rem]" style="text-shadow: 1px 4px 6px rgba(255, 255, 255, 0.8), 0 0 0 rgba(0, 0, 0, 0.5), 1px 4px 6px rgba(255, 255, 255, 0.8);">НАЧАТЬ ТВОРИТЬ</div>
+        </div>
+        <img src="{% static 'img/brush.png' %}" alt="" class="absolute right-0 top-0 z-10 w-[44px] tablet-small:w-[46px] tablet:w-[40px] desktop:w-[44px] large-desktop:w-[48px] h-[44px] tablet-small:h-[46px] tablet:h-[40px] desktop:h-[44px] large-desktop:h-[48px] -mt-2 tablet:-mt-3 mr-3 tablet:mr-2 desktop:mr-4">
+      </div>
+      <div class="block laptop:hidden w-full mt-4 tablet:mt-8 py-[8px] px-2 tablet-small:px-4 border-t-[2px] border-b-[2px] border-black border-opacity-10 text-center">
+        <div class="text-[22px] tablet-small:text-[24px] font-['Jost-Medium'] leading-[1.8rem] tracking-[0.04rem] tablet-small:tracking-[0.075rem] opacity-80">Откройте для себя LeoBuild – умный инструмент для планировки вашего интерьера.</div>
+      </div>
+    </div>
+    <div class="block absolute laptop:hidden z-0 w-full h-[320px] tablet-small:h-[350px] bg-[center_bottom_0rem] bg-cover bg-[length:780px_566px] rounded-[14px]" style="background-image: url({% static 'img/main-page-photo-1.png' %});"></div>
+    <div class="hidden laptop:block absolute top-0 right-0 z-0 ml-auto">
+      <img src="{% static 'img/main-page-photo-1.png' %}" alt="Описание изображения" class="w-[480px] large-desktop:w-[650px] h-auto" style="mask-image: linear-gradient(-70deg, black -50%, #333333 10%, transparent 85%); mask-mode: alpha;">
+    </div>
+  </section>
+
+  <section class="tablet:flex relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] h-auto mx-auto">
+    <div class="flex relative w-full h-[250px] tablet:h-[300px] laptop:h-[380px] desktop:h-[420px] large-desktop:h-[450px] mt-24 tablet-small:mt-36 tablet:mt-64 desktop:mt-80 large-desktop:mt-96 bg-gradient-to-br from-[#EAFEFF]/40 to-[#EFC2FF]/40 laptop:border-[5px] border-white rounded-[20px]">
+      <img src="{% static 'img/main-page-photo-3.png' %}" alt="" class="absolute w-[420px] tablet:w-[630px] desktop:w-[700px] large-desktop:w-[760px] -mt-[80px] tablet-small:-mt-[120px] tablet:-mt-[250px] laptop:-mt-[200px] desktop:-mt-[240px] large-desktop:-mt-[260px] ml-auto laptop:-ml-[40px] desktop:-ml-[20px] left-0 right-0 mr-auto">
+      <div class="text-center mt-auto mb-[20px] laptop:mb-[50px] large-desktop:mb-[60px] ml-auto laptop:ml-[20px] mr-auto laptop:mr-0 desktop:ml-[40px] text-[30px] tablet-small:text-[34px] tablet:text-[46px] desktop:text-[56px] large-desktop:text-[62px] font-[Jost-Bold] tracking-[0.00rem] tablet-small:tracking-[0.025rem]" style="background: linear-gradient(to right, #ABEBFF, #EF8FFF); -webkit-background-clip: text; /* Обрезка фона по тексту для WebKit-браузеров */ -webkit-text-fill-color: transparent; /* Применение прозрачного цвета к тексту */ filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.4)); /* Тень с размытием */">
+        ЧТО ТАКОЕ LEOBUILD?
+      </div>
+    </div>
+    <img src="{% static 'img/main-page-photo-4.png' %}" alt="" class="absolute right-0 bottom-0 w-[400px] desktop:w-[480px] tablet:mb-[-400px] laptop:mb-0">
+    <div class="flex flex-col tablet:absolute right-0 bottom-0 w-full laptop:w-[380px] desktop:w-[446px] large-desktop:w-[480px] tablet:h-[350px] laptop:h-[460px] desktop:h-[520px] large-desktop:h-[560px] mt-[20px] tablet:mt-0 tablet:-mb-[400px] laptop:mb-[25px] desktop:mb-[35px] laptop:mr-[25px] desktop:mr-[50px] px-[16px] tablet-small:px-[24px] desktop:px-[32px] large-desktop:px-[40px] pt-[30px] pb-[20px] bg-white bg-opacity-40 rounded-[20px] backdrop-blur-[1px] laptop:backdrop-blur-sm">
+      <img src="{% static 'img/LEOBUILD.png' %}" alt="" class="w-[150px] desktop:w-[167px] large-desktop:w-[180px]">
+      <div class="w-full h-1 mt-3 bg-[#6D0B8F] bg-opacity-10"></div>
+      <div class="mt-4 text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-[Jost-Regular] text-black text-opacity-70 tracking-[0.09rem] leading-[1.7rem] desktop:leading-[1.9rem] large-desktop:leading-[2.3rem]">
+        Бесплатная WEB платформа
+        призванная помочь обустроить дом каждого желающего в реальном времени и из любой точки мира вне зависимости от вашего финансового состояния и вкусов интерьера
+      </div>
+      <div class="flex mt-[40px] tablet:mt-auto bg-white rounded-[12px] desktop:rounded-[18px]">
+        <div class="flex relative w-full">
+          <div class="absolute left-0 -mt-1 large-desktop:-mt-1.5 bg-white p-1 rounded-[8px]" style="box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);">
+            <img src="{% static 'img/main-page-icon-1.png' %}" alt="" class="w-[38px] desktop:w-[42px] large-desktop:w-[46px]">
+          </div>
+          <div class="ml-auto py-1 desktop:py-2 px-3 text-[24px] tablet-small:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-Medium] tracking-[0.07rem]">БЫСТРО, ПРОСТО</div>
+        </div>
+      </div>
+      <div class="flex mt-[20px] desktop:mt-[14px] large-desktop:mt-[20px] bg-white rounded-[12px] desktop:rounded-[18px]">
+        <div class="flex relative w-full">
+          <div class="absolute left-0 -mt-1 large-desktop:-mt-1.5 bg-white p-1 rounded-[8px]" style="box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);">
+            <img src="{% static 'img/main-page-icon-2.png' %}" alt="" class="w-[38px] desktop:w-[42px] large-desktop:w-[46px]">
+          </div>
+          <div class="ml-auto py-1 desktop:py-2 px-3 text-[24px] tablet-small:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-Medium] tracking-[0.07rem]">И СО ВКУСОМ</div>
+        </div>
+      </div>
+    </div>
+    <div class="absolute z-0 bottom-0 left-0 w-full laptop:w-[500px] desktop:w-[530px] large-desktop:w-[570px] h-[80px] desktop:h-[88px] large-desktop:h-[96px] p-[3px] -mb-[100px] tablet:-mb-[500px] laptop:-mb-[55px] large-desktop:-mb-[65px] laptop:-ml-[25px] desktop:-ml-[40px] large-desktop:-ml-[45px] rounded-[20px]" style="background-image: url({% static 'img/main-page-photo-5.png' %});">
+      <div class="flex z-10 w-full h-full bg-white rounded-[18px]">
+        <div class="whitespace-nowrap absolute top-0 left-0 ml-3 mt-1.5 text-[17px] tablet-small:text-[18px] desktop:text-[20px] font-[Arimo-BoldItalic] leading-[1.3rem] tablet-small:leading-[1.6rem]">
+          “ Если вы можете это представить
+          <br>
+          -это должно сбыться... ”
+        </div>
+        <div class="absolute right-0 bottom-0 mr-3 mb-1.5 text-[19px] tablet-small:text-[20px] desktop:text-[23px] font-[Jost-SemiBold]">
+          — Уолт Дисней
+        </div>
+      </div>
+    </div>
+    <!--{% static "img/main-page-photo-5.png" %}-->
+  </section>
+
+  <section class="flex-col laptop:flex-row flex relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] h-auto mx-auto mt-[200px] tablet:mt-[630px] laptop:mt-44 desktop:mt-56 large-desktop:mt-64">
+    <div class="z-30 flex laptop:hidden w-min h-min mt-[20px] tablet-small:mt-[80px] mr-4 pl-4 px-6 py-2 bg-white bg-opacity-10 backdrop-blur-sm rounded-[20px]">
+      <div class="text-[52px] tablet-small:text-[58px] tablet:text-[48px] text-white font-[Jost-ExtraBold] leading-[3.8rem] tablet:leading-[3.2rem] " style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, 1px 1px 0 #000, 1px 1px 0 #000;">ПОЧЕМУ <br> LEOBUILD?</div>
+    </div>
+    <div class="flex flex-col relative w-full laptop:w-[350px] desktop:w-[400px] large-desktop:w-[430px] h-[400px] laptop:h-[450px] desktop:h-[550px] large-desktop:h-[590px] mt-6 tablet:mt-16 laptop:mt-auto px-3 py-3 border-[3px] tablet:border-[5px] border-white rounded-[20px] overflow-hidden">
+      <img src="{% static 'img/main-page-photo-8.png' %}" alt="" class="absolute z-0 -ml-6 -mt-16">
+      <div class="flex z-10 w-full mt-auto py-3 bg-white rounded-[10px] desktop:rounded-[16px]">
+        <img src="{% static 'img/БОЛЬШОЙ АССОРТИМЕНТ.png' %}" alt="" class="w-[300px] tablet:w-[250px] desktop:w-[330px] large-desktop:w-[360px] mx-auto">
+      </div>
+      <div class="flex flex-col z-10 w-full mt-4 desktop:mt-8 px-4 pt-4 pb-8 large-desktop:pb-12 bg-white bg-opacity-70 backdrop-blur-sm rounded-[10px] desktop:rounded-[16px]">
+        <div class="w-full h-1 large-desktop:h-1.5 mt-2 bg-gradient-to-r from-[#A6E4FF]/60 to-[#000000]/10"></div>
+        <div class="mt-6 text-center text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Light] tracking-[0.04rem] desktop:tracking-[0.07rem] leading-[1.8rem] desktop:leading-[2.2rem]">
+          в каталоге LeoBuild представлено обширное количество секций и товаров из разных фирм и магазинов
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col w-full laptop:w-[350px] desktop:w-[400px] large-desktop:w-[430px] h-[400px] laptop:h-[450px] desktop:h-[550px] large-desktop:h-[590px] mt-6 laptop:ml-2 desktop:ml-8 px-3 laptop:px-6 pt-3 laptop:pt-6 pb-3 laptop:pb-0 border-[3px] tablet:border-[5px] laptop:border-[0px] border-white rounded-[20px]">
+      <img src="{% static 'img/main-page-photo-9.png' %}" alt="" class="absolute z-0 w-[450px] desktop:w-[530px] large-desktop:w-[570px] ml-auto laptop:-ml-10 desktop:-ml-20 mr-auto laptop:mr-0 -mt-10">
+      <div class="flex z-10 w-full mt-auto pt-3 pb-3 desktop:pb-3.5 bg-white rounded-[10px] desktop:rounded-[16px]">
+        <img src="{% static 'img/ГРАФИЧЕСКИЙ ДВИЖОК.png' %}" alt="" class="w-[282px] tablet:w-[235px] desktop:w-[300px] large-desktop:w-[330px] mx-auto">
+      </div>
+      <div class="flex flex-col z-10 w-full mt-4 desktop:mt-8 px-4 pt-4 pb-12 large-desktop:pb-16 bg-white bg-opacity-70 backdrop-blur-sm rounded-[10px] desktop:rounded-[16px]">
+        <div class="w-full h-1 large-desktop:h-1.5 mt-2 bg-gradient-to-r from-[#000000]/10 to-[#A6E4FF]/60"></div>
+        <div class="mt-6 text-center text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Light] tracking-[0.04rem] desktop:tracking-[0.07rem] leading-[1.8rem] desktop:leading-[2.2rem]">
+          наш редактор использует самые передовые разрабтки webGL одной из которых является BabylonJS
+        </div>
+      </div>
+    </div>
+    <div class="flex laptop:hidden w-full mt-4 laptop:mt-auto ml-auto py-3 border-[3px] tablet:border-[5px] border-white rounded-[14px] text-[19px] tablet:text-[17px] text-[#3A3A3A] font-[Jost-Medium]">
+      <div class="w-min whitespace-nowrap mx-auto tracking-[0.07rem]">ПРИСТУПИТЬ К СОЗДАНИЮ</div>
+    </div>
+    <img src="{% static 'img/main-page-photo-7.png' %}" alt="" class="absolute right-0 top-0 w-[300px] tablet:w-[260px] desktop:w-[316px] large-desktop:w-[340px] h-[370px] tablet:h-[320px] desktop:h-[390px] large-desktop:h-[420px] -mt-16">
+    <div class="hidden laptop:flex flex-1 flex-col pl-10">
+      <div class="w-min h-min mr-4 pl-4 desktop:pl-12 large-desktop:pl-20 px-6 py-2 bg-white bg-opacity-10 backdrop-blur-sm rounded-[20px]">
+        <div class="text-[42px] desktop:text-[52px] large-desktop:text-[56px] text-white font-[Jost-ExtraBold] leading-[3.2rem] desktop:leading-[4.2rem]" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, 1px 1px 0 #000, 1px 1px 0 #000;">ПОЧЕМУ <br> LEOBUILD?</div>
+      </div>
+      <div class="flex w-full desktop:w-[calc(100%-60px)] mt-auto ml-auto py-3 desktop:py-6 border-[5px] border-white rounded-[14px] desktop:rounded-[20px] text-[17px] desktop:text-[20px] large-desktop:text-[22px] text-[#3A3A3A] font-[Jost-Medium]">
+        <div class="w-min whitespace-nowrap mx-auto tracking-[0.07rem]">ПРИСТУПИТЬ К СОЗДАНИЮ</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="laptop:flex relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] h-auto mx-auto mt-20 tablet-small:mt-24 desktop:mt-36">
+    <div class="w-full laptop:w-[500px] desktop:w-[600px] large-desktop:w-[650px] h-[180px] tablet:h-[400px] laptop:h-[310px] desktop:h-[370px] large-desktop:h-[400px] mt-[20px] desktop:mt-0 bg-gradient-to-tr from-[#EFC2FF]/40 from-10% via-[#EFC2FF]/15 via-40% to-[#EAFEFF]/10 to-90% rounded-[20px]"></div>
+    <img src="{% static 'img/main-page-photo-10.png' %}" alt="" class="absolute z-0 left-0 right-0 top-0 w-[500px] laptop:w-[550px] desktop:w-[690px] large-desktop:w-[750px] ml-auto laptop:ml-0 mr-auto laptop:mr-0 mt-[-40px] laptop:mt-[20px] desktop:mt-0">
+    <div class="flex flex-col laptop:absolute z-10 desktop:bottom-0 left-0 laptop:ml-10 mt-[110px] tablet-small:mt-[170px] tablet:mt-[40px] laptop:mt-[225px] desktop:mt-0">
+      <div class="w-full laptop:w-[390px] desktop:w-[420px] large-desktop:w-[450px] tablet:bg-white tablet:px-4 py-1 tablet:py-3 text-[28px] desktop:text-[30px] large-desktop:text-[34px] font-[Jost-ExtraBold] rounded-[14px] desktop:rounded-[20px] tracking-[0.1rem]">
+        КАК ЭТО РАБОТАЕТ?
+      </div>
+      <div class="w-full laptop:w-[390px] desktop:w-[420px] large-desktop:w-[450px] tablet:mt-4 large-desktop:mt-8 mb-6 tablet:mb-0 laptop:-mb-48 tablet:px-4 tablet:py-8 tablet:bg-white bg-opacity-80 backdrop-blur-sm text-[28px] tablet:text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-ExtraLight] rounded-[14px] desktop:rounded-[20px] tracking-[0.1rem] tablet:tracking-[0.09rem] leading-[1.8rem] desktop:leading-[2.2rem]">
+        мы приложили все наши усилия, чтобы интерфейс был максимально прост и удобен в использовании
+      </div>
+    </div>
+    <div class="laptop:absolute right-0 top-0 flex flex-col w-full laptop:w-[420px] desktop:w-[510px] large-desktop:w-[550px] mt-[20px] laptop:mt-[38px] large-desktop:mt-[68px]">
+      <div class="flex relative w-full px-2.5 tablet:px-4 pt-2.5 pb-6 desktop:pb-8 border-2 border-white rounded-[20px]">
+        <img src="{% static 'img/main-page-photo-11.png' %}" alt="" class="absolute z-0 w-full h-full -ml-2.5 tablet:-ml-4 -mt-2.5 rounded-[20px]">
+        <div class="absolute z-10 w-full h-full -ml-2.5 tablet:-ml-4 -mt-2.5 bg-gradient-to-r from-[#BEF7FF]/30 from-10% via-[#BEF7FF]/15 via-30% to-[#524FFF]/10 to-90% rounded-[20px]"></div>
+        <div class="relative z-20 flex w-[55px] large-desktop:w-[60px] h-[55px] large-desktop:h-[60px] bg-white rounded-[16px]">
+          <div class="mx-auto text-white text-[38px] desktop:text-[42px] large-desktop:text-[46px] font-[Jost-SemiBold]" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, 1px 1px 0 #000, 1px 1px 0 #000;">1</div>
+        </div>
+        <div class="relative z-10 w-[320px] large-desktop:w-[350px] ml-auto text-right text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Light] tracking-[0.07rem] leading-[1.8rem] desktop:leading-[2.2rem]">
+          зарегистрируйтесь и войдите в планер через главное меню
+        </div>
+      </div>
+      <div class="w-0.5 h-3 laptop:h-5 bg-black mx-auto my-1 laptop:my-2 "></div>
+      <div class="flex relative w-full px-2.5 tablet:px-4 pt-2.5 pb-6 desktop:pb-8 border-2 border-white rounded-[20px]">
+        <img src="{% static 'img/main-page-photo-12.png' %}" alt="" class="absolute z-0 w-full h-full -ml-2.5 tablet:-ml-4 -mt-2.5 rounded-[20px]">
+        <div class="absolute z-10 w-full h-full -ml-2.5 tablet:-ml-4 -mt-2.5 bg-gradient-to-r from-[#BEFFDC]/30 from-10% via-[#BEFFDC]/15 via-30% to-[#9C4FFF]/10 to-90% rounded-[20px]"></div>
+        <div class="relative z-20 flex w-[55px] large-desktop:w-[60px] h-[55px] large-desktop:h-[60px] bg-white rounded-[16px]">
+          <div class="mx-auto -mt-1 text-white text-[38px] desktop:text-[42px] large-desktop:text-[46px] font-[Jost-SemiBold]" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, 1px 1px 0 #000, 1px 1px 0 #000;">2</div>
+        </div>
+        <div class="relative z-10 w-[300px] large-desktop:w-[330px] ml-auto text-right text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Light] tracking-[0.07rem] leading-[1.8rem] desktop:leading-[2.2rem]">
+          создайте помещение в котором хотите разместить мебель
+        </div>
+      </div>
+      <div class="w-0.5 h-3 laptop:h-5 bg-black mx-auto my-1 laptop:my-2 "></div>
+      <div class="flex relative w-full px-2.5 tablet:px-4 pt-2.5 pb-6 desktop:pb-8 border-2 border-white rounded-[20px]">
+        <img src="{% static 'img/main-page-photo-13.png' %}" alt="" class="absolute z-0 w-full h-full -ml-2.5 tablet:-ml-4 -mt-2.5 rounded-[20px]">
+        <div class="absolute z-10 w-full h-full -ml-2.5 tablet:-ml-4 -mt-2.5 bg-gradient-to-r from-[#BEE8FF]/30 from-10% via-[#BEE8FF]/15 via-30% to-[#FF4FCE]/10 to-90% rounded-[20px]"></div>
+        <div class="relative z-20 flex w-[55px] large-desktop:w-[60px] h-[55px] large-desktop:h-[60px] bg-white rounded-[16px]">
+          <div class="mx-auto -mt-0.5 text-white text-[38px] desktop:text-[42px] large-desktop:text-[46px] font-[Jost-SemiBold]" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, 1px 1px 0 #000, 1px 1px 0 #000;">3</div>
+        </div>
+        <div class="relative z-10 w-[300px] large-desktop:w-[330px] ml-auto text-right text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Light] tracking-[0.07rem] leading-[1.8rem] desktop:leading-[2.2rem]">
+          дайте волю фантазии и позвольте нам творить за вас :)
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-0 right-0 -mb-10 tablet-small:-mb-12 laptop:-mb-48 desktop:-mb-64 mr-4 tablet:mr-5 text-[24px] tablet-small:text-[26px] tablet:text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-[Jost-Bold]">#LEOBUILD</div>
+  </section>
+
+  <section class="flex relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] h-auto mx-auto mt-[40px] tablet-small:mt-[50px] tablet:mt-[70px] laptop:mt-[280px] desktop:mt-[370px] large-desktop:mt-[420px]">
+    <div class="flex flex-col w-full pt-6 laptop:pr-6 desktop:pr-8 laptop:bg-gradient-to-bl from-[#F6EAFF]/100 from-20% via-[#FFFFFF]/30 via-30% via-[#000]/0 via-35% to-[#FFFFFF]/0 to-100% rounded-[20px]">
+      <div class="flex w-full">
+        <div class="w-1 h-9 tablet-small:h-10 tablet:h-8 desktop:h-9 large-desktop:h-10 bg-black"></div>
+        <div class="h-9 tablet-small:h-10 tablet:h-8 desktop:h-9 large-desktop:h-10 ml-2 pl-4 bg-gradient-to-r from-[#EFDEFF]/100 from-10% via-[#DCC1FF]/30 via-50% to-[#DCC1FF]/0 to-100% text-[32px] tablet-small:text-[36px] tablet:text-[32px] desktop:text-[36px] large-desktop:text-[40px] font-[Jost-Regular] tracking-[0.05rem] tablet-small:tracking-[0.1rem] leading-[1.8rem] tablet-small:leading-[2rem] tablet:leading-[1.6rem] desktop:leading-[1.8rem] large-desktop:leading-[2rem]">
+          последние новости
+        </div>
+        <div class="hidden laptop:flex flex-col -mt-3 desktop:-mt-1 ml-auto">
+          <div class="flex ml-auto">
+            <div class="text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-[Jost-Regular] tracking-[0.12rem] opacity-50">смотреть ещё</div>
+            <img src="{% static 'img/arrow.png' %}" alt="" class="w-[18px] desktop:w-[22px] h-[18px] desktop:h-[22px] mt-2.5 ml-4">
+          </div>
+          <div class="w-[240px] desktop:w-[270px] large-desktop:w-[300px] h-1 mt-1 bg-gradient-to-l from-[#9B37FF]/100 from-10% via-[#9B37FF]/30 via-50% to-[#000]/0 to-100%"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 laptop:grid-cols-3 gap-8 desktop:gap-12 w-full mt-6 desktop:pt-10 large-desktop:pt-16">
+        <div class="w-full">
+          <div class="w-full h-[160px] desktop:h-[180px] large-desktop:h-[200px] bg-center bg-cover rounded-[14px] desktop:rounded-[20px]" style="background-image: url({% static 'img/main-page-news-photo-1.jpeg' %});"></div>
+          <div class="flex tablet:block desktop:flex w-full mt-2 font-[Jost-Regular]">
+            <div class="whitespace-nowrap text-[22px] tablet:text-[20px] desktop:text-[22px] large-desktop:text-[24px] text-[#7000FF] opacity-50">Новая коллекция HOFF</div>
+            <div class="mt-auto ml-auto text-[20px] tablet:text-[18px] desktop:text-[20px] large-desktop:text-[22px] opacity-80">4 часа назад</div>
+          </div>
+          <div class="mt-3 text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-[Jost-Regular] tracking-[0.04rem] large-desktop:tracking-[0.07rem] leading-[1.7rem] desktop:leading-[2rem]">Сегодня бренд HOFF радостно объявил о запуске своей новой коллекции мебели 2024</div>
+          <div class="mt-3 text-[20px] large-desktop:text-[22px] font-[Jost-Regular] opacity-50">#hoff #2024 #мебель</div>
+        </div>
+        <div class="w-full">
+          <div class="w-full h-[160px] desktop:h-[180px] large-desktop:h-[200px] bg-center bg-cover rounded-[14px] desktop:rounded-[20px]" style="background-image: url({% static 'img/main-page-news-photo-2.jpeg' %});"></div>
+          <div class="flex tablet:block desktop:flex w-full mt-2 font-[Jost-Regular]">
+            <div class="whitespace-nowrap text-[22px] tablet:text-[20px] desktop:text-[22px] large-desktop:text-[24px] text-[#7000FF] opacity-50">Стулья IKEA</div>
+            <div class="mt-auto ml-auto text-[20px] tablet:text-[18px] desktop:text-[20px] large-desktop:text-[22px] opacity-80">4 часа назад</div>
+          </div>
+          <div class="mt-3 text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-[Jost-Regular] tracking-[0.04rem] large-desktop:tracking-[0.07rem] leading-[1.7rem] desktop:leading-[2rem]">Компания IKEA анонсировала премьеру новой линии стульев в стиле хакки</div>
+          <div class="mt-3 text-[20px] large-desktop:text-[22px] font-[Jost-Regular] opacity-50">#ikea #мебель #стиль</div>
+        </div>
+        <div class="w-full">
+          <div class="w-full h-[160px] desktop:h-[180px] large-desktop:h-[200px] bg-center bg-cover rounded-[14px] desktop:rounded-[20px]" style="background-image: url({% static 'img/main-page-news-photo-3.jpeg' %});"></div>
+          <div class="flex tablet:block desktop:flex w-full mt-2 font-[Jost-Regular]">
+            <div class="whitespace-nowrap text-[22px] tablet:text-[20px] desktop:text-[22px] large-desktop:text-[24px] text-[#7000FF] opacity-50">Тенденции интерьера</div>
+            <div class="mt-auto ml-auto text-[20px] tablet:text-[18px] desktop:text-[20px] large-desktop:text-[22px] opacity-80">4 часа назад</div>
+          </div>
+          <div class="mt-3 text-[22px] desktop:text-[24px] large-desktop:text-[26px] font-[Jost-Regular] tracking-[0.04rem] large-desktop:tracking-[0.07rem] leading-[1.7rem] desktop:leading-[2rem]">Мебель из натурального дерева, текстиль из органического хлопка и декор из вторичного стекла</div>
+          <div class="mt-3 text-[20px] large-desktop:text-[22px] font-[Jost-Regular] opacity-50">#тенденции #дерево #ЭКО</div>
+        </div>
+      </div>
+      <div class="flex laptop:hidden flex-col mt-3 ml-auto">
+        <div class="flex ml-auto">
+          <div class="text-[22px] font-[Jost-Regular] tracking-[0.12rem] opacity-50">смотреть ещё</div>
+          <img src="{% static 'img/arrow.png' %}" alt="" class="w-[18px] h-[18px] mt-2.5 ml-4">
+        </div>
+        <div class="w-[240px] h-1 mt-1 bg-gradient-to-l from-[#9B37FF]/100 from-10% via-[#9B37FF]/30 via-50% to-[#000]/0 to-100%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative flex flex-col z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] laptop:h-[500px] desktop:h-[590px] large-desktop:h-[640px] mx-auto mt-[50px] desktop:mt-[130px] large-desktop:mt-[170px]">
+    <div class="w-full flex laptop:hidden flex-col">
+      <div class="w-full flex">
+        <img src="{% static 'img/main-page-icon-3.png' %}" alt="" class="w-[46px] tablet-small:w-[52px] h-[46px] tablet-small:h-[52px] bg-white bg-opacity-50 p-2 rounded-[12px]">
+        <div class="ml-auto text-[34px] tablet-small:text-[36px] tablet:text-[45px] font-[Jost-Regular] tablet:font-[Jost-SemiBold] tracking-[0.04rem] tablet-small:tracking-[0.07rem] leading-[2.9rem] tablet-small:leading-[3.2rem]">НАШИ ПАРТНЁРЫ</div>
+      </div>
+      <div class="mt-6 tablet:mt-4 text-[32px] tablet-small:text-[36px] tablet:text-[42px] font-[Jost-ExtraLight] tracking-[0.05rem] tablet-small:tracking-[0.1rem] leading-[2.2rem] tablet-small:leading-[2.4rem] tablet:leading-[2.7rem]">Сотрудничество, на <br> котором строится успех</div>
+    </div>
+    <div class="w-full h-full mt-[20px] laptop:mt-0 pl-[3px] tablet-small:pl-[4px] pt-[2.5px] tablet-small:pt-[3.5px] pr-[2px] tablet-small:pr-[3px] pb-[2.5px] tablet-small:pb-[3.5px] rounded-[20px] bg-gradient-to-br from-[#ECB8FF]/40 from-0% to-[#92BDFF]/40 to-100%">
+      <div class="flex w-full h-full bg-white bg-opacity-80 z-10 p-3.5 tablet-small:p-6 large-desktop:p-10 rounded-[18px]">
+        <img src="{% static 'img/main-page-photo-14.png' %}" alt="" class="absolute z-20 top-0 left-0 w-full h-[calc(100%-160px)] tablet-small:h-[calc(100%-175px)] laptop:h-full mt-[160px] tablet-small:mt-[175px] laptop:mt-0 rounded-[20px]">
+        <div class="hidden laptop:block relative z-30 w-[calc(100%-460px)] desktop:w-[calc(100%-600px)]">
+          <img src="{% static 'img/main-page-icon-3.png' %}" alt="" class="w-[52px] desktop:w-[58px] large-desktop:w-[64px] bg-white bg-opacity-50 p-2 rounded-[12px]">
+          <div class="mt-40 desktop:mt-56 text-[45px] desktop:text-[48px] large-desktop:text-[52px] font-[Jost-SemiBold] tracking-[0.07rem] desktop:tracking-[0.1rem]">НАШИ ПАРТНЁРЫ</div>
+          <div class="mt-4 text-[42px] desktop:text-[48px] large-desktop:text-[52px] font-[Jost-ExtraLight] tracking-[0.1rem] desktop:tracking-[0.15rem] leading-[2.7rem] desktop:leading-[3.2rem]">Сотрудничество, <br> на котором <br> строится успех</div>
+        </div>
+        <div class="z-30 grid grid-cols-1 laptop:grid-cols-2 gap-4 desktop:gap-8 w-full laptop:w-auto h-[calc(100%+48px)] large-desktop:h-[calc(100%+80px)] -mt-6 large-desktop:-mt-10">
+          <div class="hidden laptop:block overflow-hidden w-full h-full">
+            <div class="flex w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-24 desktop:mt-8 p-6 bg-white rounded-[20px]">
+            </div>
+            <div class="flex w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-6 p-3 bg-white rounded-[20px]">
+              <img src="{% static 'img/main-page-logo-1.png' %}" alt="" class="mx-auto">
+            </div>
+            <div class="flex w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-6 p-1 bg-white rounded-[20px]">
+              <img src="{% static 'img/main-page-logo-2.png' %}" alt="" class="mx-auto">
+            </div>
+            <div class="flex w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-6 p-6 bg-white rounded-[20px]">
+              <img src="{% static 'img/main-page-logo-3.png' %}" alt="" class="mx-auto">
+            </div>
+          </div>
+          <div class="overflow-hidden w-full h-full">
+            <div class="flex w-full laptop:w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-6 laptop:-mt-36 desktop:-mt-10 p-6 bg-white rounded-[20px]">
+              <img src="{% static 'img/main-page-logo-4.png' %}" alt="" class="mx-auto">
+            </div>
+            <div class="flex w-full laptop:w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-6 p-6 bg-white rounded-[20px]">
+              <img src="{% static 'img/main-page-logo-5.png' %}" alt="" class="mx-auto">
+            </div>
+            <div class="flex w-full laptop:w-[230px] desktop:w-[270px] large-desktop:w-[300px] h-[140px] large-desktop:h-[150px] mt-6 p-6 bg-white rounded-[20px]">
+              <img src="{% static 'img/main-page-logo-6.png' %}" alt="" class="mx-auto">
+            </div>
+            <div class="flex flex-col w-full laptop:w-[230px] desktop:w-[270px] large-desktop:w-[300px] laptop:h-[140px] large-desktop:h-[150px] mt-4 laptop:mt-12 mb-4 laptop:mb-0">
+              <div class="mx-auto text-[32px] tablet:text-[28px] desktop:text-[32px] large-desktop:text-[36px] font-[Jost-ExtraLight] tracking-[0.1rem]">показать ещё</div>
+              <div class="flex flex-col mx-auto">
+                <div class="w-[80px] desktop:w-[100px] large-desktop:w-[120px] h-[2px] bg-black bg-opacity-30"></div>
+                <div class="w-[80px] desktop:w-[100px] large-desktop:w-[120px] h-[2px] mt-1 bg-black bg-opacity-30"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative z-10 w-full tablet:w-[768px] laptop:w-[1000px] desktop:w-[1300px] large-desktop:w-[1400px] mx-auto mt-[50px] tablet:mt-[80px] large-desktop:mt-[120px] pb-[50px] tablet:pb-[80px] desktop:pb-[120px] large-desktop:pb-[200px]">
+    <div class="w-full h-[3.5px] tablet-small:h-1 bg-center bg-cover" style="background-image: url({% static 'img/main-page-photo-15.jpg' %});"></div>
+    <div class="tablet:flex w-full mt-10 large-desktop:mt-16">
+      <div class="w-full tablet:w-auto flex flex-col">
+        <img src="{% static 'img/LeoBuildLogo_v1 1.png' %}" alt="" class="mx-auto tablet:mx-0 w-[270px] desktop:w-[290px] large-desktop:w-[320px]">
+        <div class="mx-auto tablet:mx-0 mt-4 text-[28px] desktop:text-[30px] large-desktop:text-[33px] font-[Jost-Regular] tracking-[0.1rem]">от людей и для людей</div>
+      </div>
+      <div class="w-full tablet:w-auto flex flex-col mt-6 tablet:mt-0 ml-auto">
+        <div class="mx-auto tablet:mx-0 flex -mt-3 text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Regular] tracking-[0.07rem]">
+          <div>О нас</div>
+          <div class="ml-6 tablet:ml-12">Политика</div>
+          <div class="ml-6 tablet:ml-12">Контакты</div>
+        </div>
+        <div class="mx-auto tablet:mx-0 mt-5 text-center tablet:text-right text-[24px] desktop:text-[26px] large-desktop:text-[28px] font-[Jost-Medium] tracking-[0.07rem] leading-[2.2rem]">© 2023 leobuild™ <br> все права защищены</div>
+      </div>
+    </div>
+  </section>
+
   <div class="BackCircles w-full h-full fixed top-0 left-0 z-0"></div>
 
   <script>
     const container = document.querySelector('.BackCircles');
     const colors = ['#d4d5f7', '#ceebee', '#f7edde', '#e4e5f9'];
-    const numberOfCircles = 50;
+    const numberOfCircles = 30;
 
     function interpolateColor(color1, color2, factor) {
       const result = color1.slice();
