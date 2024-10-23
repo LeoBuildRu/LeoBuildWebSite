@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <link href="{% static 'fonts/font.css' %}" rel="stylesheet">
     <title>Babylon.js и Tailwind CSS</title>
     <style>
         html, body {
@@ -22,19 +23,245 @@
           height: 100%;
           outline: 0;
         }
-      </style>
+
+        .masked-overflow {
+          /* scroll bar width, for use in mask calculations */
+          --scrollbar-settings-width: 12px;
+
+          /* mask fade distance, for use in mask calculations */
+          --mask-height: 32px;
+
+          /* If content exceeds height of container, overflow! */
+          overflow-y: auto;
+
+          /* Need to make sure container has bottom space,
+        otherwise content at the bottom is always faded out */
+          padding-bottom: var(--mask-height);
+
+          /* Keep some space between content and scrollbar */
+          padding-right: 12px;
+
+          /* The CSS mask */
+
+          /* The content mask is a linear gradient from top to bottom */
+          --mask-image-content: linear-gradient(
+              to bottom,
+              transparent, /* Начинаем с прозрачного */
+              black 0%,   /* Добавляем черный цвет на уровне 75% */
+              black 75%,  /* Черный цвет продолжается до конца */
+              transparent  /* Transparent на 100% */
+          );
+
+          /* Here we scale the content gradient to the width of the container 
+        minus the scrollbar width. The height is the full container height */
+          --mask-size-content: calc(100% - var(--scrollbar-settings-width)) 100%;
+
+          /* The scrollbar mask is a black pixel */
+          --mask-image-scrollbar: linear-gradient(black, black);
+
+          /* The width of our black pixel is the width of the scrollbar.
+        The height is the full container height */
+          --mask-size-scrollbar: var(--scrollbar-settings-width) 100%;
+
+          /* Apply the mask image and mask size variables */
+          mask-image: var(--mask-image-content), var(--mask-image-scrollbar);
+          mask-size: var(--mask-size-content), var(--mask-size-scrollbar);
+
+          /* Position the content gradient in the top left, and the 
+        scroll gradient in the top right */
+          mask-position: 0 0, 100% 0;
+
+          /* We don't repeat our mask images */
+          mask-repeat: no-repeat, no-repeat;
+        }
+
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 12px; /* Ширина скроллбара */
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
+            border-radius: 12px; /* Закругленные углы полосы */
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            width: 12px;
+            background-color: rgba(0, 0, 0, 0.2);; /* Темно-серый цвет для ползунка */
+            border-radius: 12px; /* Закругленные углы для ползунка */
+            border: 2px solid rgba(255, 255, 255, 1);;
+        }
+
+        /* Убираем стрелки */
+        .custom-scroll::-webkit-scrollbar-button {
+            display: none; /* Скрыть стрелки */
+        }
+
+        input[type=range][orient=vertical] {
+            writing-mode: vertical-lr;
+            direction: rtl;
+            appearance: slider-vertical;
+            width: 16px;
+            vertical-align: bottom;
+        }
+    </style>
 </head>
 <body>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-16 mr-8 bg-white text-center" id="CreateWall">CREATE WALL</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-32 mr-8 bg-white text-center CreateCill" type="WindowMesh">CREATE WIN</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-48 mr-8 bg-white text-center CreateCill" type="DefoltMesh">CREATE DEF</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-64 mr-8 bg-white text-center" id="CreateFloor">CREATE FLOR</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-80 mr-8 bg-white text-center" id="ChageTo2D">2D CAMERA</button>
-    <button class="absolute right-0 top-0 w-36 h-12 mt-96 mr-8 bg-white text-center" id="ChageTo3D">3D CAMERA</button>
-    <canvas id="renderCanvas"></canvas>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
-    <script src="{% static 'js/bundle.js' %}"></script>
-    <script src="{% static 'js/app.js' %}"></script>
+
+    <section class="absolute overflow-hidden flex flex-col w-[370px] h-[calc(100%-60px)] m-[30px] p-4 bg-gradient-to-t from-[#FFEAFF]/70 to-[#C0FFFB]/70 border-[3px] border-white backdrop-blur-[4px] rounded-[20px]">
+      <img src="{% static 'img/builder-page-photo-1.png' %}" alt="" class="absolute bottom-0 left-0 w-[370px] -ml-[50px] mb-[40px] opacity-60">
+      <div class="flex w-full h-auto py-1.5 bg-white rounded-[14px]">
+        <img src="{% static 'img/builder-page-logo-1.png' %}" alt="" class="w-[250px] mx-auto">
+      </div>
+      <div class="flex flex-col w-full mt-[15px]">
+        <div class="flex w-full">
+          <div class="text-[24px] font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.6rem]">перейти на главную</div>
+          <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] h-[18px] mt-auto ml-auto">
+        </div>
+        <div class="w-full h-[2px] mt-[6px] bg-black"></div>
+      </div>
+      <div class="flex flex-col w-full mt-[35px] pb-[20px] bg-white bg-opacity-70 rounded-[14px]">
+        <div class="w-full bg-white py-1 text-center text-[20px] font-[Jost-Medium] tracking-[0.07rem] rounded-[14px]">КОНФИГУРАТОР</div>
+        <div class="flex flex-col w-full mt-[20px] px-[16px]">
+          <div class="text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ШИРИНА СТЕНЫ</div>
+          <div class="flex w-full mt-[4px]">
+            <img src="{% static 'img/width.png' %}" alt="" class="w-[32px] h-[32px] my-auto">
+            <div class="flex flex-1 ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
+              <div class="my-auto text-[16px] font-[Jost-Medium]">10.8 м</div>
+              <input type="range" class="ml-auto">
+            </div>
+            <div class="flex bg-white w-[38px] h-[38px] ml-[10px] text-[16px] font-[Jost-Medium] rounded-[8px]">
+              <div class="w-min h-min mx-auto my-auto">OK</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col w-full mt-[14px] px-[16px]">
+          <div class="text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ВЫСОТА СТЕНЫ</div>
+          <div class="flex w-full mt-[4px]">
+            <img src="{% static 'img/height.png' %}" alt="" class="w-[32px] h-[32px] my-auto">
+            <div class="flex flex-1 ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
+              <div class="my-auto text-[16px] font-[Jost-Medium]">12.8 м</div>
+              <input type="range" class="ml-auto">
+            </div>
+            <div class="flex bg-white w-[38px] h-[38px] ml-[10px] text-[16px] font-[Jost-Medium] rounded-[8px]">
+              <div class="w-min h-min mx-auto my-auto">OK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-[10px] w-full mt-[10px]">
+        <div class="w-full bg-white pt-0.5 pb-1.5 text-center text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.3rem] rounded-[10px]">создать<br>
+          стены</div>
+        <div class="w-full bg-white pt-0.5 pb-1.5 text-center text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.3rem] rounded-[10px]">создать<br>
+          пол</div>
+      </div>
+      <div class="flex flex-col w-full mt-[35px]">
+        <div class="text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КАТАЛОГ</div>
+        <div class="flex flex-col w-full h-[280px] custom-scroll masked-overflow gap-[10px] mt-[6px]">
+          <div class="flex w-full gap-[12px]">
+            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <img src="{% static 'img/catalog-icon-1.png' %}" alt="" class="w-[28px] h-[28px]">
+            </div>
+            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">МЕБЕЛЬ</div>
+            </div>
+          </div>
+          <div class="flex w-full gap-[12px]">
+            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <img src="{% static 'img/catalog-icon-2.png' %}" alt="" class="w-[28px] h-[28px]">
+            </div>
+            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОКНА</div>
+            </div>
+          </div>
+          <div class="flex w-full gap-[12px]">
+            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <img src="{% static 'img/catalog-icon-3.png' %}" alt="" class="w-[28px] h-[28px]">
+            </div>
+            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ДВЕРИ</div>
+            </div>
+          </div>
+          <div class="flex w-full gap-[12px]">
+            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <img src="{% static 'img/catalog-icon-4.png' %}" alt="" class="w-[28px] h-[28px]">
+            </div>
+            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОБОИ</div>
+            </div>
+          </div>
+          <div class="flex w-full gap-[12px]">
+            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <img src="{% static 'img/catalog-icon-5.png' %}" alt="" class="w-[28px] h-[28px]">
+            </div>
+            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ПОЛ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col w-full mt-auto">
+        <div class="text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КОРЗИНА</div>
+        <div class="relative flex flex-col w-full h-[280px] mt-[10px] bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+          <img src="{% static 'img/shopping-cart.png' %}" alt="" class="absolute w-[160px] left-0 right-0 mx-auto top-0 bottom-0 my-auto">
+        </div>
+      </div>
+    </section>
+
+    <section class="absolute top-0 left-0 right-0 mx-auto flex flex-col w-[800px] mt-[30px]">
+      <div class="flex h-[55px] px-4 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div class="flex h-min my-auto text-[20px] font-[Jost-Medium] opacity-50">
+          <div class="tracking-[0.07rem]">Поиск</div>
+          <div class="ml-[3px] tracking-[0.15rem]">...</div>
+        </div>
+        <img src="{% static 'img/search.png' %}" alt="" class="w-[24px] h-[24px] ml-auto my-auto opacity-50">
+      </div>
+    </section>
+    
+    <section class="absolute top-0 right-0 flex gap-4 mt-[30px] mr-[30px]">
+      <div class="flex h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] font-[Jost-Medium] rounded-[12px]">
+        <div class="my-auto w-[120px] -mt-[2px] text-center text-[20px] tracking-[0.07rem] leading-[1.2rem]">итоговая стоимость</div>
+        <div class="my-auto text-[32px] leading-[1rem] mt-[8px] mr-[14px]">:</div>
+        <div class="flex w-[170px] px-2 h-full bg-white rounded-[8px]">
+          <div class="ml-auto my-auto text-[18px]">64 900</div>
+          <div class="my-auto w-[1.5px] h-[20px] bg-black ml-3 mr-1.5"></div>
+          <div class="my-auto text-[18px]">₽</div>
+        </div>
+      </div>
+      <div class="w-[50px] h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/account.png' %}" alt="" class="w-full h-full">
+      </div>
+    </section>
+
+    <section class="absolute top-0 bottom-0 my-auto right-0 flex flex-col h-min mr-[30px]">
+      <div class="flex w-[50px] h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div class="m-auto text-[22px] font-[Jost-Light]">3D</div>
+      </div>
+      <div class="flex w-[50px] h-[50px] mt-[8px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div class="m-auto text-[22px] font-[Jost-Light]">2D</div>
+      </div>
+      <div class="flex w-[50px] h-[50px] mt-[30px] p-[13px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/plus.png' %}" alt="" class="w-full h-full">
+      </div>
+      <div class="flex flex-col w-[50px] mt-[8px] py-[8px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/loop.png' %}" alt="" class="w-[24px] h-[24px] mx-auto">
+        <input class="mx-auto mt-[12px] mb-[8px]" type="range" orient="vertical" />
+      </div>
+      <div class="flex w-[50px] h-[50px] mt-[8px] p-[13px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/minus.png' %}" alt="" class="w-full h-full">
+      </div>
+    </section>
+
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-16 mr-8 bg-white text-center" id="CreateWall">CREATE WALL</button>
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-32 mr-8 bg-white text-center CreateCill" type="WindowMesh">CREATE WIN</button>
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-48 mr-8 bg-white text-center CreateCill" type="DefoltMesh">CREATE DEF</button>
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-64 mr-8 bg-white text-center" id="CreateFloor">CREATE FLOR</button>
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-80 mr-8 bg-white text-center" id="ChageTo2D">2D CAMERA</button>
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-96 mr-8 bg-white text-center" id="ChageTo3D">3D CAMERA</button>
+  <canvas id="renderCanvas"></canvas>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
+  <script src="{% static 'js/bundle.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
 </body>
 </html>
