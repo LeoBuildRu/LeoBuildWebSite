@@ -55,7 +55,8 @@ let points_array = []; // массив для позиций точек в фо�
 let points_array_ = []; // массив для хранения последних трёх позиций точек в формате вектор3
 var posOx, posOz, posTx, posTz; // posOx и posOz - первая точка для выстраивания вектора | posTx и posTz - вторая точка для выстраивания вектора
 var dx, dz, len, udx, udz, nx, nz; // значения calculateNormal для выстраивания перпендикуляра
-var R = 0.4; // ширина стены
+var wallWidth = 0.4; // ширина стены
+var heightWidth = 0.4; // высота стены
 var pointO, pointT // точки для построения линии
 var line; // линия, для нахождения пересечений
 var pointsLI; // массив для заточения в него точек для последующего создания линии
@@ -130,6 +131,12 @@ document.getElementById('CreateWall').addEventListener('click', (e)=> {
 
 document.getElementById('CreateFloor').addEventListener('click', (e)=> {
 	endingOptions.FloorCreateValidator = true
+});
+
+document.getElementById('wall-width-accept').addEventListener('click', function() {
+	// Получаем значение input
+	wallWidth = document.getElementById('wall-width-value').value;
+	console.log(wallWidth)
 });
 
 function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMaterial_, doubleFaceMaterial_){
@@ -1058,7 +1065,7 @@ function builder(canvas_, scene_, light_, camera_, plane_, redMaterial_, blueMat
 		SideWall.metadata = { intersected: [] }
 		SideWall.immovable = true
 
-		SideWall.depth = R
+		SideWall.depth = wallWidth
 
 		SideWallMesh_array.push(SideWall)
 		SideWallMesh_array_.push(SideWall)
@@ -1117,11 +1124,11 @@ function calculateNormal(VecO, VecT){
 	nx = - udz
 	nz =  udx
 	
-	posOx = VecO.x + nx * R
-	posOz = VecO.z + nz * R 
+	posOx = VecO.x + nx * wallWidth
+	posOz = VecO.z + nz * wallWidth 
 
-	posTx = VecO.x - nx * R
-	posTz = VecO.z - nz * R 
+	posTx = VecO.x - nx * wallWidth
+	posTz = VecO.z - nz * wallWidth 
 }
 
 // функция создания линий posOSx и posOSz - начальные точки, posTSx и posTSz - конечные

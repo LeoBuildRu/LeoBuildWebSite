@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
     <link href="{% static 'fonts/font.css' %}" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
     <title>Babylon.js и Tailwind CSS</title>
     <style>
         html, body {
@@ -24,12 +25,32 @@
           outline: 0;
         }
 
+        .mask-image-1 {
+          --mask-image-content: linear-gradient(
+              to bottom,
+              transparent,
+              black 0%,
+              black 80%,
+              transparent
+          );
+        }
+
+        .mask-image-2 {
+          --mask-image-content: linear-gradient(
+              to bottom,
+              transparent,
+              black 0%,
+              black 90%,
+              transparent
+          );
+        }
+
         .masked-overflow {
           /* scroll bar width, for use in mask calculations */
           --scrollbar-settings-width: 12px;
 
           /* mask fade distance, for use in mask calculations */
-          --mask-height: 32px;
+          --mask-height: 36px;
 
           /* If content exceeds height of container, overflow! */
           overflow-y: auto;
@@ -39,18 +60,8 @@
           padding-bottom: var(--mask-height);
 
           /* Keep some space between content and scrollbar */
-          padding-right: 12px;
 
           /* The CSS mask */
-
-          /* The content mask is a linear gradient from top to bottom */
-          --mask-image-content: linear-gradient(
-              to bottom,
-              transparent, /* Начинаем с прозрачного */
-              black 0%,   /* Добавляем черный цвет на уровне 75% */
-              black 75%,  /* Черный цвет продолжается до конца */
-              transparent  /* Transparent на 100% */
-          );
 
           /* Here we scale the content gradient to the width of the container 
         minus the scrollbar width. The height is the full container height */
@@ -76,13 +87,29 @@
         }
 
 
-        .custom-scroll::-webkit-scrollbar {
+        .custom-scroll-scrollbar-1::-webkit-scrollbar {
             width: 12px; /* Ширина скроллбара */
         }
+        .custom-scroll-scrollbar-2::-webkit-scrollbar {
+            width: 0px; /* Ширина скроллбара */
+        }
 
-        .custom-scroll::-webkit-scrollbar-track {
+        .custom-scroll-track-1::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
             border-radius: 12px; /* Закругленные углы полосы */
+        }
+
+        .custom-scroll-track-2::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
+            border-radius: 12px; /* Закругленные углы полосы */
+            margin-bottom: 150px;
+        }
+
+        .custom-scroll-track-3::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
+            border-radius: 12px; /* Закругленные углы полосы */
+            margin-top: 0.5rem;
+            margin-bottom: 50px;
         }
 
         .custom-scroll::-webkit-scrollbar-thumb {
@@ -104,150 +131,535 @@
             width: 16px;
             vertical-align: bottom;
         }
+
+        .dots {
+            flex: 1; /* Заполняем свободное пространство */
+            border-bottom: 1.5px dotted black; /* Создаем линию из точек */
+            margin: 0 5px; /* Отступы сбоку от текста */
+        }
     </style>
 </head>
-<body>
+<body x-data="{ configurator: true, companyChoise: false, targetCompany: false, searchTab: false, infoPanel: false, controlPanel: true }" x-init="controlPanel = window.innerWidth > 1024" @resize.window="controlPanel = window.innerWidth > 1024" class="">
 
-    <section class="absolute overflow-hidden flex flex-col w-[370px] h-[calc(100%-60px)] m-[30px] p-4 bg-gradient-to-t from-[#FFEAFF]/70 to-[#C0FFFB]/70 border-[3px] border-white backdrop-blur-[4px] rounded-[20px]">
-      <img src="{% static 'img/builder-page-photo-1.png' %}" alt="" class="absolute bottom-0 left-0 w-[370px] -ml-[50px] mb-[40px] opacity-60">
-      <div class="flex w-full h-auto py-1.5 bg-white rounded-[14px]">
-        <img src="{% static 'img/builder-page-logo-1.png' %}" alt="" class="w-[250px] mx-auto">
+    <section x-show="controlPanel" class="absolute z-20 overflow-hidden flex flex-col w-full laptop:w-[310px] desktop:w-[340px] large-desktop:w-[370px] h-full laptop:h-[calc(100%-20px)] desktop:h-[calc(100%-40px)] large-desktop:h-[calc(100%-60px)] laptop:m-[10px] desktop:m-[20px] large-desktop:m-[30px] p-2.5 large-desktop:p-4 bg-gradient-to-t from-[#FFEAFF]/70 to-[#C0FFFB]/70 laptop:border-[3px] border-white backdrop-blur-[4px] laptop:rounded-[20px]">
+      <img src="{% static 'img/builder-page-photo-1.png' %}" alt="" class="absolute bottom-0 left-0 w-[320px] large-desktop:w-[370px] -ml-[50px] mb-[20px] large-desktop:mb-[40px] opacity-60">
+      <div class="flex w-full h-auto mt-[66px] laptop:mt-0 py-1.5 bg-white rounded-[14px]">
+        <img src="{% static 'img/builder-page-logo-1.png' %}" alt="" class="w-[220px] laptop:w-[200px] desktop:w-[220px] large-desktop:w-[250px] mx-auto">
       </div>
-      <div class="flex flex-col w-full mt-[15px]">
-        <div class="flex w-full">
-          <div class="text-[24px] font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.6rem]">перейти на главную</div>
-          <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] h-[18px] mt-auto ml-auto">
+
+      <div class="flex flex-col w-full mt-[12px] large-desktop:mt-[15px]">
+        <div x-show="configurator">
+          <div class="flex w-full">
+            <a href="../" class="text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.4rem] large-desktop:leading-[1.6rem]">перейти на главную</a>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] laptop:w-[17px] large-desktop:w-[18px] h-[18px] laptop:h-[17px] large-desktop:h-[18px] mt-auto ml-auto">
+          </div>
+          <div class="w-full h-[2px] mt-[6px] bg-black"></div>
         </div>
-        <div class="w-full h-[2px] mt-[6px] bg-black"></div>
-      </div>
-      <div class="flex flex-col w-full mt-[35px] pb-[20px] bg-white bg-opacity-70 rounded-[14px]">
-        <div class="w-full bg-white py-1 text-center text-[20px] font-[Jost-Medium] tracking-[0.07rem] rounded-[14px]">КОНФИГУРАТОР</div>
-        <div class="flex flex-col w-full mt-[20px] px-[16px]">
-          <div class="text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ШИРИНА СТЕНЫ</div>
-          <div class="flex w-full mt-[4px]">
-            <img src="{% static 'img/width.png' %}" alt="" class="w-[32px] h-[32px] my-auto">
-            <div class="flex flex-1 ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
-              <div class="my-auto text-[16px] font-[Jost-Medium]">10.8 м</div>
-              <input type="range" class="ml-auto">
-            </div>
-            <div class="flex bg-white w-[38px] h-[38px] ml-[10px] text-[16px] font-[Jost-Medium] rounded-[8px]">
-              <div class="w-min h-min mx-auto my-auto">OK</div>
-            </div>
+        <div x-show="companyChoise" @click="companyChoise = false, configurator = true">
+          <div class="flex w-full">
+            <div class="text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.4rem] large-desktop:leading-[1.6rem]">к конфигуратору</div>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] laptop:w-[17px] large-desktop:w-[18px] h-[18px] laptop:h-[17px] large-desktop:h-[18px] mt-auto ml-auto">
+          </div>
+          <div class="w-full h-[2px] mt-[6px] bg-black"></div>
+          <div class="flex w-full h-[40px] mt-[25px] large-desktop:mt-[35px] bg-white text-[20px] laptop:text-[17px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Light] tracking-[0.07rem] rounded-[12px] large-desktop:rounded-[14px]">
+            <div class="mx-auto my-auto">МЕБЕЛЬ</div>
           </div>
         </div>
-        <div class="flex flex-col w-full mt-[14px] px-[16px]">
-          <div class="text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ВЫСОТА СТЕНЫ</div>
-          <div class="flex w-full mt-[4px]">
-            <img src="{% static 'img/height.png' %}" alt="" class="w-[32px] h-[32px] my-auto">
-            <div class="flex flex-1 ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
-              <div class="my-auto text-[16px] font-[Jost-Medium]">12.8 м</div>
-              <input type="range" class="ml-auto">
-            </div>
-            <div class="flex bg-white w-[38px] h-[38px] ml-[10px] text-[16px] font-[Jost-Medium] rounded-[8px]">
-              <div class="w-min h-min mx-auto my-auto">OK</div>
-            </div>
+        <div x-show="targetCompany" @click="targetCompany = false, companyChoise = true">
+          <div class="flex w-full">
+            <div class="text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.4rem] large-desktop:leading-[1.6rem]">к компаниям</div>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] laptop:w-[17px] large-desktop:w-[18px] h-[18px] laptop:h-[17px] large-desktop:h-[18px] mt-auto ml-auto">
+          </div>
+          <div class="w-full h-[2px] mt-[6px] bg-black"></div>
+          <div class="flex w-full h-[40px] mt-[25px] large-desktop:mt-[35px] bg-white text-[20px] laptop:text-[17px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Light] tracking-[0.07rem] rounded-[12px] large-desktop:rounded-[14px]">
+            <div class="mx-auto my-auto">HOFF</div>
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-[10px] w-full mt-[10px]">
-        <div class="w-full bg-white pt-0.5 pb-1.5 text-center text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.3rem] rounded-[10px]">создать<br>
-          стены</div>
-        <div class="w-full bg-white pt-0.5 pb-1.5 text-center text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.3rem] rounded-[10px]">создать<br>
-          пол</div>
-      </div>
-      <div class="flex flex-col w-full mt-[35px]">
-        <div class="text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КАТАЛОГ</div>
-        <div class="flex flex-col w-full h-[280px] custom-scroll masked-overflow gap-[10px] mt-[6px]">
-          <div class="flex w-full gap-[12px]">
-            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <img src="{% static 'img/catalog-icon-1.png' %}" alt="" class="w-[28px] h-[28px]">
-            </div>
-            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">МЕБЕЛЬ</div>
-            </div>
-          </div>
-          <div class="flex w-full gap-[12px]">
-            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <img src="{% static 'img/catalog-icon-2.png' %}" alt="" class="w-[28px] h-[28px]">
-            </div>
-            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОКНА</div>
+
+      <div x-show="configurator" x-data="transitions" x-bind="opacityTransition" class="mt-[25px] mb-4 pr-[8px] large-desktop:mt-[35px] custom-scroll custom-scroll-scrollbar-1 custom-scroll-track-2 masked-overflow mask-image-2">
+        <div class="flex flex-col w-full pb-[20px] bg-white bg-opacity-70 rounded-[12px] large-desktop:rounded-[14px]">
+          <div class="w-full bg-white py-1 text-center text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Medium] tracking-[0.07rem] rounded-[12px] large-desktop:rounded-[14px]">КОНФИГУРАТОР</div>
+          <div class="flex flex-col w-full mt-[16px] large-desktop:mt-[20px] px-[12px] large-desktop:px-[16px]">
+            <div class="text-[15px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ШИРИНА СТЕНЫ</div>
+            <div class="flex w-full mt-[4px]">
+              <img src="{% static 'img/width.png' %}" alt="" class="w-[32px] laptop:w-[27px] desktop:w-[30px] large-desktop:w-[32px] h-[32px] laptop:h-[27px] desktop:h-[30px] large-desktop:h-[32px] my-auto">
+              <div class="flex flex-1 ml-[10px] desktop:ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
+                <div class="flex whitespace-nowrap my-auto text-[16px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] font-[Jost-Medium]">
+                  <input id="wall-width-value" class="w-[35px] text-center outline-none" placeholder="10.8">
+                  <div class="ml-1">м</div>
+                </div>
+                <input type="range" class="ml-3 w-full">
+              </div>
+              <div id="wall-width-accept" class="flex bg-white w-[38px] h-[38px] ml-[7px] desktop:ml-[10px] text-[16px] laptop:text-[12px] desktop:text-[14px] large-desktop:text-[16px] font-[Jost-Medium] rounded-[8px]">
+                <div class="w-min h-min mx-auto my-auto">OK</div>
+              </div>
             </div>
           </div>
-          <div class="flex w-full gap-[12px]">
-            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <img src="{% static 'img/catalog-icon-3.png' %}" alt="" class="w-[28px] h-[28px]">
-            </div>
-            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ДВЕРИ</div>
+          <div class="flex flex-col w-full mt-[10px] large-desktop:mt-[14px] px-[12px] large-desktop:px-[16px]">
+            <div class="text-[15px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ВЫСОТА СТЕНЫ</div>
+            <div class="flex w-full mt-[4px]">
+              <img src="{% static 'img/height.png' %}" alt="" class="w-[32px] laptop:w-[27px] desktop:w-[30px] large-desktop:w-[32px] h-[32px] laptop:h-[27px] desktop:h-[30px] large-desktop:h-[32px] my-auto">
+              <div class="flex flex-1 ml-[10px] desktop:ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
+                <div class="flex whitespace-nowrap my-auto text-[16px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] font-[Jost-Medium]">
+                  <input class="w-[35px] text-center outline-none" placeholder="12.5">
+                  <div class="ml-1">м</div>
+                </div>
+                <input type="range" class="ml-3 w-full">
+              </div>
+              <div class="flex bg-white w-[38px] h-[38px] ml-[7px] desktop:ml-[10px] text-[16px] laptop:text-[12px] desktop:text-[14px] large-desktop:text-[16px] font-[Jost-Medium] rounded-[8px]">
+                <div class="w-min h-min mx-auto my-auto">OK</div>
+              </div>
             </div>
           </div>
-          <div class="flex w-full gap-[12px]">
-            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <img src="{% static 'img/catalog-icon-4.png' %}" alt="" class="w-[28px] h-[28px]">
+        </div>
+        <div class="grid grid-cols-2 gap-[10px] w-full mt-[10px]">
+          <div id="CreateWall" class="w-full bg-white pt-1 laptop:pt-0.5 pb-2 laptop:pb-1.5 text-center text-[20px] laptop:text-[17px] desktop:text-[20px] large-desktop:text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.1rem] large-desktop:leading-[1.3rem] rounded-[10px]">создать<br>
+            стены</div> 
+          <div id="CreateFloor" class="w-full bg-white pt-1 laptop:pt-0.5 pb-2 laptop:pb-1.5 text-center text-[20px] laptop:text-[17px] desktop:text-[20px] large-desktop:text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.1rem] large-desktop:leading-[1.3rem] rounded-[10px]">создать<br>
+            пол</div>
+        </div>
+        <div class="flex flex-col w-full mt-[20px] desktop:mt-[25px] large-desktop:mt-[35px]">
+          <div class="text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КАТАЛОГ</div>
+          <div class="flex flex-col w-full gap-[6px] desktop:gap-[10px] mt-[4px] desktop:mt-[2px] large-desktop:mt-[6px]">
+            <div @click="configurator = false, companyChoise = true" class="flex w-full gap-[8px] desktop:gap-[12px]">
+              <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <img src="{% static 'img/catalog-icon-1.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+              </div>
+              <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">МЕБЕЛЬ</div>
+              </div>
             </div>
-            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОБОИ</div>
+            <div class="flex w-full gap-[8px] desktop:gap-[12px]">
+              <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <img src="{% static 'img/catalog-icon-2.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+              </div>
+              <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОКНА</div>
+              </div>
             </div>
-          </div>
-          <div class="flex w-full gap-[12px]">
-            <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <img src="{% static 'img/catalog-icon-5.png' %}" alt="" class="w-[28px] h-[28px]">
+            <div class="flex w-full gap-[8px] desktop:gap-[12px]">
+              <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <img src="{% static 'img/catalog-icon-3.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+              </div>
+              <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ДВЕРИ</div>
+              </div>
             </div>
-            <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-              <div class="my-auto mx-auto text-[22px] font-[Jost-Light] tracking-[0.07rem]">ПОЛ</div>
+            <div class="flex w-full gap-[8px] desktop:gap-[12px]">
+              <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <img src="{% static 'img/catalog-icon-4.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+              </div>
+              <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОБОИ</div>
+              </div>
+            </div>
+            <div class="flex w-full gap-[8px] desktop:gap-[12px]">
+              <div class="p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <img src="{% static 'img/catalog-icon-5.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+              </div>
+              <div class="flex flex-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ПОЛ</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="flex flex-col w-full mt-auto">
-        <div class="text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КОРЗИНА</div>
-        <div class="relative flex flex-col w-full h-[280px] mt-[10px] bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-          <img src="{% static 'img/shopping-cart.png' %}" alt="" class="absolute w-[160px] left-0 right-0 mx-auto top-0 bottom-0 my-auto">
+
+      <div x-show="companyChoise" x-data="transitions" x-bind="opacityTransition" class="flex flex-col w-full mt-[15px] custom-scroll custom-scroll-scrollbar-2 desktop:custom-scroll-scrollbar-1 custom-scroll-track-1 masked-overflow mask-image-1">
+        <div class="grid grid-cols-2 tablet-small:grid-cols-3 tablet:grid-cols-4 laptop:grid-cols-2 gap-2 w-full">
+          <div @click="companyChoise = false, targetCompany = true" class="p-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="flex w-full h-[120px] laptop:h-[80px] desktop:h-[100px] p-2 bg-white bg-opacity-100 rounded-[10px]">
+              <img src="{% static 'img/main-page-logo-5.png' %}" alt="" class="w-full m-auto">
+            </div>
+          </div>
+          <div class="p-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="flex w-full h-[120px] laptop:h-[80px] desktop:h-[100px] p-2 bg-white bg-opacity-100 rounded-[10px]">
+              <img src="{% static 'img/main-page-logo-3.png' %}" alt="" class="w-full m-auto">
+            </div>
+          </div>
+          <div class="p-1 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="flex w-full h-[120px] laptop:h-[80px] desktop:h-[100px] p-2 bg-white bg-opacity-100 rounded-[10px]">
+              <img src="{% static 'img/main-page-logo-2.png' %}" alt="" class="w-full m-auto">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="targetCompany-id" x-show="targetCompany" x-data="transitions" x-bind="opacityTransition" class="flex flex-col w-[calc(100%+0.5rem)] mt-[15px] mb-4 -ml-2 pt-2 pl-2 desktop:pr-[8px] custom-scroll custom-scroll-track-3 masked-overflow mask-image-2">
+        <div class="grid grid-cols-1 gap-3">
+          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div @click="infoPanel = true; if (window.innerWidth < 1024) controlPanel = false" class="absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black">
+              <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+            </div>
+            <div class="flex w-full gap-1">
+              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">ПАРМА</div>
+                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
+              </div>
+            </div>
+            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
+              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5">
+                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black">
+              <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+            </div>
+            <div class="flex w-full gap-1">
+              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/bad.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">DREAMART</div>
+                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">баварское качество по доступной цене</div>
+              </div>
+            </div>
+            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">25 990 ₽/шт</div>
+              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5">
+                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black">
+              <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+            </div>
+            <div class="flex w-full gap-1">
+              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/backward.jpg' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">РОНА</div>
+                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">идеальное решение для уютного интерьера</div>
+              </div>
+            </div>
+            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">15 100 ₽/шт</div>
+              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5">
+                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black">
+              <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+            </div>
+            <div class="flex w-full gap-1">
+              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/chair.jpg' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">SCANDICA</div>
+                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">ваш комфорт и удобство - scandica</div>
+              </div>
+            </div>
+            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
+              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5">
+                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+            <div class="absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black">
+              <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+            </div>
+            <div class="flex w-full gap-1">
+              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">ПАРМА</div>
+                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
+              </div>
+            </div>
+            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
+              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5">
+                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col w-full mt-auto pt-[0px]">
+        <div class="text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КОРЗИНА</div>
+        <div class="relative flex flex-col w-full h-[140px] desktop:h-[245px] large-desktop:h-[290px] mt-[7px] large-desktop:mt-[10px] p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+          <img src="{% static 'img/shopping-cart.png' %}" alt="" class="absolute w-[160px] left-0 right-0 mx-auto top-0 bottom-0 my-auto hidden">
+          <div class="grid grid-cols-1 gap-y-1.5 large-desktop:gap-y-2 w-[calc(100%+0.75rem)] h-full pr-[12px] custom-scroll-scrollbar-2 masked-overflow mask-image-1">
+            <div class="flex w-full gap-2">
+              <div class="flex w-[70px] laptop:w-[60px] desktop:w-[70px] large-desktop:w-[80px] h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/backward.jpg' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] py-1 desktop:py-2 px-3 bg-white text-right text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] rounded-[10px]">
+                <div class="flex flex-col text-left">
+                  <div class="font-[Jost-Bold] tracking-[0.07rem] opacity-40">РОНА</div>
+                  <div class="mt-auto font-[Jost-Medium] tracking-[0.04rem]">15 100₽</div>
+                </div>
+                <div class="flex flex-col ml-auto text-center font-[Jost-Medium]">
+                  <div>1</div>
+                  <div class="mt-auto">шт</div>
+                </div>
+              </div>
+            </div>
+            <div class="flex w-full gap-2">
+              <div class="flex w-[70px] laptop:w-[60px] desktop:w-[70px] large-desktop:w-[80px] h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/chair.jpg' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] py-1 desktop:py-2 px-3 bg-white text-right text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] rounded-[10px]">
+                <div class="flex flex-col text-left">
+                  <div class="font-[Jost-Bold] tracking-[0.07rem] opacity-40">SCANDICA</div>
+                  <div class="mt-auto font-[Jost-Medium] tracking-[0.04rem]">13 990₽</div>
+                </div>
+                <div class="flex flex-col ml-auto text-center font-[Jost-Medium]">
+                  <div>1</div>
+                  <div class="mt-auto">шт</div>
+                </div>
+              </div>
+            </div>
+            <div class="flex w-full gap-2">
+              <div class="flex w-[70px] laptop:w-[60px] desktop:w-[70px] large-desktop:w-[80px] h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/bad.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] py-1 desktop:py-2 px-3 bg-white text-right text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] rounded-[10px]">
+                <div class="flex flex-col text-left">
+                  <div class="font-[Jost-Bold] tracking-[0.07rem] opacity-40">DREAMART</div>
+                  <div class="mt-auto font-[Jost-Medium] tracking-[0.04rem]">25 990₽</div>
+                </div>
+                <div class="flex flex-col ml-auto text-center font-[Jost-Medium]">
+                  <div>1</div>
+                  <div class="mt-auto">шт</div>
+                </div>
+              </div>
+            </div>
+            <div class="flex w-full gap-2">
+              <div class="flex w-[70px] laptop:w-[60px] desktop:w-[70px] large-desktop:w-[80px] h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] bg-white rounded-[10px]">
+                <img src="{% static 'img/bad.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+              <div class="flex flex-1 h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] py-1 desktop:py-2 px-3 bg-white text-right text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] rounded-[10px]">
+                <div class="flex flex-col text-left">
+                  <div class="font-[Jost-Bold] tracking-[0.07rem] opacity-40">DREAMART</div>
+                  <div class="mt-auto font-[Jost-Medium] tracking-[0.04rem]">25 990₽</div>
+                </div>
+                <div class="flex flex-col ml-auto text-center font-[Jost-Medium]">
+                  <div>1</div>
+                  <div class="mt-auto">шт</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="absolute top-0 left-0 right-0 mx-auto flex flex-col w-[800px] mt-[30px]">
-      <div class="flex h-[55px] px-4 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
-        <div class="flex h-min my-auto text-[20px] font-[Jost-Medium] opacity-50">
-          <div class="tracking-[0.07rem]">Поиск</div>
-          <div class="ml-[3px] tracking-[0.15rem]">...</div>
+    <section @click="controlPanel = !controlPanel" :class="controlPanel ? 'top-0 mt-[10px]' : 'bottom-0'" class="absolute laptop:hidden z-30 w-full h-[56px] px-[10px] pb-[10px]">
+      <div class="flex w-full h-full bg-white px-[16px] rounded-[12px]">
+        <div class="my-auto font-[Jost-Medium] text-[19px] tracking-[0.07rem]">ПАНЕЛЬ УПРАВЛЕНИЯ</div>
+        <img x-show="!controlPanel" src="{% static 'img/arrow-up.png' %}" alt="" class="w-auto h-[20px] ml-auto my-auto">
+        <img x-show="controlPanel" src="{% static 'img/arrow-up.png' %}" alt="" class="w-auto h-[20px] ml-auto my-auto rotate-180">
+      </div>
+    </section>
+
+    <section x-show="infoPanel" x-data="transitions" x-bind="opacityTransition" class="absolute z-40 w-full h-full  bg-white bg-opacity-50">
+      <div x-on:click.away="infoPanel = false" class="absolute left-0 right-0 mx-auto top-0 bottom-0 flex flex-col my-auto w-[calc(100%-20px)] tablet-small:w-[400px] laptop:w-[360px] desktop:w-[400px] large-desktop:w-[430px] h-[590px] laptop:h-[520px] desktop:h-[590px] large-desktop:h-[620px] p-2.5 large-desktop:p-4 bg-white bg-opacity-50 border-[3px] border-white backdrop-blur-[2px] rounded-[16px]">
+        <div class="flex w-full gap-3">
+          <div class="flex flex-1 px-4 bg-white rounded-[8px]">
+            <div class="my-auto text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-Bold]">ПАРМА</div>
+          </div>
+          <div @click="infoPanel = false" class="w-[45px] laptop:w-[40px] desktop:w-[45px] large-desktop:w-[50px] h-[45px] laptop:h-[40px] desktop:h-[45px] large-desktop:h-[50px] p-3 desktop:p-4 bg-[#FF0000] bg-opacity-40 rounded-[8px]">
+            <img src="{% static 'img/cancel.png' %}" alt="" class="w-full m-auto">
+          </div>
         </div>
-        <img src="{% static 'img/search.png' %}" alt="" class="w-[24px] h-[24px] ml-auto my-auto opacity-50">
+        <div class="flex flex-col w-full h-[430px] laptop:h-[380px] desktop:h-[430px] large-desktop:h-[460px] mt-3 pr-[12px] custom-scroll custom-scroll-scrollbar-1 custom-scroll-track-2 masked-overflow mask-image-2">
+          <div class="relative flex w-full h-[170px] laptop:h-[140px] desktop:h-[170px] p-1 bg-white rounded-[8px]">
+            <img src="{% static 'img/parma.jpg' %}" alt="" class="h-full m-auto">
+            <div class="absolute bottom-0 left-0 right-0 mx-auto w-min mb-2.5 flex gap-2">
+              <div class="w-[7px] h-[7px] rounded-full bg-[#D9D9D9]"></div>
+              <div class="w-[7px] h-[7px] rounded-full bg-[#EEEEEE]"></div>
+              <div class="w-[7px] h-[7px] rounded-full bg-[#EEEEEE]"></div>
+            </div>
+          </div>
+          <div class="mt-2 text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-SemiBold] tracking-[0.07rem] opacity-50">описание</div>
+          <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] large-desktop:text-[18px] font-[Jost-Light] tracking-[0.04rem]">Диван-кровать Парма в минималистичном стиле с элегантными формами не перегружает пространство, а пастельные тона обивки легко сочетаются с другими оттенками интерьера...</div>
+          <div class="mt-2 text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-SemiBold] tracking-[0.07rem] opacity-50">характеристики</div>
+          <div class="flex flex-col w-full mt-3 pb-[18px] gap-3">
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">цена</div>
+              <span class="dots"></span>
+              <div class="mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">13 990 ₽</div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">материал</div>
+              <span class="dots"></span>
+              <div class="mt-[1px] text-[20px] laptop:text-[18px] large-desktop:text-[20px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">рогожа</div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">высота</div>
+              <span class="dots"></span>
+              <div class="mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">0,80 м</div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">ширина</div>
+              <span class="dots"></span>
+              <div class="mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">0,78 м</div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">длина</div>
+              <span class="dots"></span>
+              <div class="mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">1,95 м</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex w-full h-[40px] large-desktop:h-[45px] mt-auto p-1 bg-center bg-cover rounded-[8px]" style="background-image: url({% static 'img/builder-page-photo-2.png' %});">
+          <div class="flex w-full h-full px-2 bg-white rounded-[6px] bg-opacity-50">
+            <div class="my-auto text-[20px] laptop:text-[19px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-SemiBold] opacity-70">HOFF</div>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[22px] laptop:w-[20px] desktop:w-[22px] large-desktop:w-[24px] h-[22px] laptop:h-[20px] desktop:h-[22px] large-desktop:h-[24px] my-auto ml-auto opacity-70">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section :class="[searchTab ? 'w-full h-screen laptop:h-auto pb-[10px] laptop:pb-0 bg-gradient-to-t laptop:bg-none from-[#FFEAFF]/70 to-[#C0FFFB]/70 backdrop-blur-[4px] laptop:backdrop-blur-[0px] laptop:pl-0 pl-[10px] laptop:pr-0 pr-[10px]' : 'w-[calc(100%-135px)] ml-[10px]', controlPanel ? 'z-10' : 'z-50']" class="absolute top-0 left-0 laptop:right-0 laptop:ml-auto laptop:mx-auto laptop:pl-0 flex flex-col laptop:w-[430px] desktop:w-[680px] large-desktop:w-[800px] pt-[10px] laptop:pt-0 laptop:mt-[10px] desktop:mt-[20px] large-desktop:mt-[30px]">
+      <div class="w-full flex">
+        <div class="flex w-full h-[50px] laptop:h-[40px] desktop:h-[50px] px-2 desktop:px-4 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+          <div @click="searchTab = true" class="flex h-min my-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Medium] opacity-50">
+            <div class="tracking-[0.07rem]">Поиск</div>
+            <div class="ml-[3px] tracking-[0.15rem]">...</div>
+          </div>
+          <img src="{% static 'img/search.png' %}" alt="" class="w-[20px] laptop:w-[19px] desktop:w-[22px] large-desktop:w-[24px] h-[20px] laptop:h-[19px] desktop:h-[22px] large-desktop:h-[24px] ml-auto my-auto opacity-50">
+        </div>
+        <div x-show="searchTab && window.innerWidth < 1024" @click="searchTab = false" class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] ml-[10px] p-3 desktop:p-4 bg-[#FF0000] bg-opacity-40 rounded-[8px]">
+          <img src="{% static 'img/cancel.png' %}" alt="" class="w-full m-auto">
+        </div>
+      </div>
+      <div :class="searchTab ? 'h-full' : 'h-[180px]'" x-show="searchTab" x-data="transitions" x-bind="opacityTransition" x-on:click.away="searchTab = false" class="flex w-full desktop:h-[250px] mt-[15px] large-desktop:mt-[20px] p-2 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div id="searchTab-id" class="flex flex-col w-full h-full desktop:pr-[8px] gap-y-2 desktop:gap-y-3 custom-scroll custom-scroll-track-1 masked-overflow mask-image-1">
+          <div class="flex w-full gap-1.5 desktop:gap-3">
+            <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
+              <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+            </div>
+            <div class="relative laptop:flex flex-1 h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] px-2.5 desktop:px-3 py-1 laptop:py-0.5 desktop:py-2 bg-white rounded-[10px]">
+              <div class="flex flex-col h-full text-left">
+                <div class="text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Bold] tracking-[0.07rem]">ПАРМА</div>
+                <div class="w-[220px] laptop:w-[170px] desktop:w-[220px] mt-0 laptop:-mt-1 desktop:mt-auto text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
+              </div>
+              <div class="flex laptop:flex-col w-full laptop:w-auto laptop:h-full ml-auto -mt-[25px] laptop:-mt-0 font-[Jost-Medium] tracking-[0.07rem]">
+                <div class="flex text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px]">
+                  <div class="mr-4">25 990 ₽/шт</div>
+                  <div class="hidden laptop:flex w-min whitespace-nowrap opacity-30">
+                    <div>info</div>
+                    <div class="w-full h-[1.5px] -mt-[5px] bg-black"></div>
+                  </div>
+                </div>
+                <div class="ml-auto -mt-0.5 laptop:mt-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px]">добавить</div>
+              </div>
+              <div @click="infoPanel = true, searchTab = false" class="flex laptop:hidden absolute right-0 top-0 mr-[10px] mt-2 w-[22px] h-[22px] rounded-full bg-black">
+                <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex w-full gap-1.5 desktop:gap-3">
+            <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
+              <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+            </div>
+            <div class="relative laptop:flex flex-1 h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] px-2.5 desktop:px-3 py-1 laptop:py-0.5 desktop:py-2 bg-white rounded-[10px]">
+              <div class="flex flex-col h-full text-left">
+                <div class="text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Bold] tracking-[0.07rem]">ПАРМА</div>
+                <div class="w-[220px] laptop:w-[170px] desktop:w-[220px] mt-0 laptop:-mt-1 desktop:mt-auto text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
+              </div>
+              <div class="flex laptop:flex-col w-full laptop:w-auto laptop:h-full ml-auto -mt-[25px] laptop:-mt-0 font-[Jost-Medium] tracking-[0.07rem]">
+                <div class="flex text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px]">
+                  <div class="mr-4">25 990 ₽/шт</div>
+                  <div class="hidden laptop:flex w-min whitespace-nowrap opacity-30">
+                    <div>info</div>
+                    <div class="w-full h-[1.5px] -mt-[5px] bg-black"></div>
+                  </div>
+                </div>
+                <div class="ml-auto -mt-0.5 laptop:mt-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px]">добавить</div>
+              </div>
+              <div @click="infoPanel = true, searchTab = false" class="flex laptop:hidden absolute right-0 top-0 mr-[10px] mt-2 w-[22px] h-[22px] rounded-full bg-black">
+                <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex w-full gap-1.5 desktop:gap-3">
+            <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
+              <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+            </div>
+            <div class="relative laptop:flex flex-1 h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] px-2.5 desktop:px-3 py-1 laptop:py-0.5 desktop:py-2 bg-white rounded-[10px]">
+              <div class="flex flex-col h-full text-left">
+                <div class="text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Bold] tracking-[0.07rem]">ПАРМА</div>
+                <div class="w-[220px] laptop:w-[170px] desktop:w-[220px] mt-0 laptop:-mt-1 desktop:mt-auto text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
+              </div>
+              <div class="flex laptop:flex-col w-full laptop:w-auto laptop:h-full ml-auto -mt-[25px] laptop:-mt-0 font-[Jost-Medium] tracking-[0.07rem]">
+                <div class="flex text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px]">
+                  <div class="mr-4">25 990 ₽/шт</div>
+                  <div class="hidden laptop:flex w-min whitespace-nowrap opacity-30">
+                    <div>info</div>
+                    <div class="w-full h-[1.5px] -mt-[5px] bg-black"></div>
+                  </div>
+                </div>
+                <div class="ml-auto -mt-0.5 laptop:mt-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px]">добавить</div>
+              </div>
+              <div @click="infoPanel = true, searchTab = false" class="flex laptop:hidden absolute right-0 top-0 mr-[10px] mt-2 w-[22px] h-[22px] rounded-full bg-black">
+                <div class="w-min h-min m-auto text-white font-[Jost-Bold]">i</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     
-    <section class="absolute top-0 right-0 flex gap-4 mt-[30px] mr-[30px]">
-      <div class="flex h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] font-[Jost-Medium] rounded-[12px]">
-        <div class="my-auto w-[120px] -mt-[2px] text-center text-[20px] tracking-[0.07rem] leading-[1.2rem]">итоговая стоимость</div>
-        <div class="my-auto text-[32px] leading-[1rem] mt-[8px] mr-[14px]">:</div>
-        <div class="flex w-[170px] px-2 h-full bg-white rounded-[8px]">
-          <div class="ml-auto my-auto text-[18px]">64 900</div>
+    <section class="absolute z-0 top-0 right-0 flex gap-2 large-desktop:gap-4 m-[10px] desktop:m-[20px] large-desktop:m-[30px]">
+      <div class="hidden laptop:flex h-[40px] desktop:h-[50px] p-[2px] desktop:p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] font-[Jost-Medium] rounded-[12px]">
+        <div class="my-auto w-[105px] desktop:w-[110px] large-desktop:w-[120px] my-auto text-center text-[16px] desktop:text-[18px] large-desktop:text-[20px] tracking-[0.07rem] leading-[0.9rem] desktop:leading-[1.1rem] large-desktop:leading-[1.2rem]">итоговая стоимость</div>
+        <div class="my-auto text-[32px] leading-[1rem] mt-[4px] desktop:mt-[8px] mr-[8px] large-desktop:mr-[14px]">:</div>
+        <div class="flex w-[135px] desktop:w-[150px] large-desktop:w-[170px] px-2 h-full bg-white rounded-[8px]">
+          <div class="ml-auto my-auto text-[15px] desktop:text-[16px] large-desktop:text-[18px]">64 900</div>
           <div class="my-auto w-[1.5px] h-[20px] bg-black ml-3 mr-1.5"></div>
-          <div class="my-auto text-[18px]">₽</div>
+          <div class="my-auto text-[15px] desktop:text-[16px] large-desktop:text-[18px]">₽</div>
         </div>
       </div>
-      <div class="w-[50px] h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+      <div class="w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] p-[3.5px] laptop:p-[2.5px] desktop:p-[5px] large-desktop:p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/basket.png' %}" alt="" class="w-full h-full">
+        <div class="flex absolute top-0 w-[17px] h-[17px] mt-[-8px] ml-[28px] laptop:ml-[24px] desktop:ml-[28px] bg-black bg-opacity-70 rounded-[15px]">
+          <div class="ml-[4.25px] mt-[-2.5px] text-[15px] text-white font-['Jost-SemiBold']">0</div>
+        </div>
+      </div>
+      <div class="w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] p-[3.5px] laptop:p-[2.5px] desktop:p-[5px] large-desktop:p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
         <img src="{% static 'img/account.png' %}" alt="" class="w-full h-full">
       </div>
     </section>
 
-    <section class="absolute top-0 bottom-0 my-auto right-0 flex flex-col h-min mr-[30px]">
-      <div class="flex w-[50px] h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
-        <div class="m-auto text-[22px] font-[Jost-Light]">3D</div>
+    <section class="absolute z-0 top-0 bottom-0 my-auto right-0 flex flex-col h-min mr-[10px] desktop:mr-[20px] large-desktop:mr-[30px]">
+      <div class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div class="m-auto text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light]">3D</div>
       </div>
-      <div class="flex w-[50px] h-[50px] mt-[8px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
-        <div class="m-auto text-[22px] font-[Jost-Light]">2D</div>
+      <div class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] mt-[8px] p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div class="m-auto text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light]">2D</div>
       </div>
-      <div class="flex w-[50px] h-[50px] mt-[30px] p-[13px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+      <div class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] mt-[30px] p-[13px] laptop:p-[10px] desktop:p-[15px] large-desktop:p-[13px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
         <img src="{% static 'img/plus.png' %}" alt="" class="w-full h-full">
       </div>
-      <div class="flex flex-col w-[50px] mt-[8px] py-[8px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
-        <img src="{% static 'img/loop.png' %}" alt="" class="w-[24px] h-[24px] mx-auto">
+      <div class="flex flex-col w-[50px] laptop:w-[40px] desktop:w-[50px] mt-[8px] py-[8px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/loop.png' %}" alt="" class="w-[22px] laptop:w-[20px] desktop:w-[22px] large-desktop:w-[24px] h-[22px] laptop:h-[20px] desktop:h-[22px] large-desktop:h-[24px] mx-auto">
         <input class="mx-auto mt-[12px] mb-[8px]" type="range" orient="vertical" />
       </div>
-      <div class="flex w-[50px] h-[50px] mt-[8px] p-[13px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+      <div class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] mt-[8px] p-[13px] laptop:p-[10px] desktop:p-[15px] large-desktop:p-[13px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
         <img src="{% static 'img/minus.png' %}" alt="" class="w-full h-full">
       </div>
     </section>
@@ -263,5 +675,52 @@
   <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
   <script src="{% static 'js/bundle.js' %}"></script>
   <script src="{% static 'js/app.js' %}"></script>
+  <script>
+    function updateScrollbarClass() {
+        if (window.innerWidth < 1440) { // Условие для мобильных устройств
+          document.getElementById("searchTab-id").classList.remove('custom-scroll-scrollbar-1');
+          document.getElementById("searchTab-id").classList.add('custom-scroll-scrollbar-2');
+          document.getElementById("targetCompany-id").classList.remove('custom-scroll-scrollbar-1');
+          document.getElementById("targetCompany-id").classList.add('custom-scroll-scrollbar-2');
+        } else { // Условие для десктопных устройств
+          document.getElementById("searchTab-id").classList.remove('custom-scroll-scrollbar-2');
+          document.getElementById("searchTab-id").classList.add('custom-scroll-scrollbar-1');
+          document.getElementById("targetCompany-id").classList.remove('custom-scroll-scrollbar-2');
+          document.getElementById("targetCompany-id").classList.add('custom-scroll-scrollbar-1');
+        }
+    }
+
+    // Вызываем функцию при загрузке страницы
+    updateScrollbarClass();
+    
+    // Добавляем обработчик события для изменения размера окна
+    window.addEventListener('resize', updateScrollbarClass);
+  </script>
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('transitions', () => ({
+        opacityTransition: {
+          ["x-transition:enter"]() {
+            return "ransition-opacity duration-500";
+          },
+          ["x-transition:enter-start"]() {
+            return "opacity-0";
+          },
+          ["x-transition:enter-end"]() {
+            return "opacity-100";
+          },
+          ["x-transition:leave"]() {
+            return "transition-opacity duration-500";
+          },
+          ["x-transition:leave-start"]() {
+            return "opacity-100 hidden";
+          },
+          ["x-transition:leave-end"]() {
+            return "opacity-0 hidden";
+          },
+        },
+      }))
+    })
+  </script>
 </body>
 </html>
