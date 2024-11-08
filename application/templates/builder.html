@@ -287,112 +287,7 @@
       </div>
 
       <div id="targetCompany-id" x-show="targetCompany" x-data="transitions" x-bind="opacityTransition" class="flex flex-col w-[calc(100%+0.5rem)] mt-[15px] mb-4 -ml-2 pt-2 pl-2 desktop:pr-[8px] custom-scroll custom-scroll-track-3 masked-overflow mask-image-2">
-        <div class="grid grid-cols-1 gap-3">
-          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-            <div @click="infoPanel = true; if (window.innerWidth < 1024) controlPanel = false" class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;">
-              <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
-            </div>
-            <div class="flex w-full gap-1">
-              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
-                <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
-              </div>
-              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
-                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">ПАРМА</div>
-                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
-              </div>
-            </div>
-            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
-              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
-              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">
-                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
-                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
-              </div>
-            </div>
-          </div>
-          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-            <div class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;"">
-              <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
-            </div>
-            <div class="flex w-full gap-1">
-              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
-                <img src="{% static 'img/bad.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
-              </div>
-              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
-                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">DREAMART</div>
-                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">баварское качество по доступной цене</div>
-              </div>
-            </div>
-            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
-              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">25 990 ₽/шт</div>
-              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">
-                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
-                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
-              </div>
-            </div>
-          </div>
-          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-            <div class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;"">
-              <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
-            </div>
-            <div class="flex w-full gap-1">
-              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
-                <img src="{% static 'img/backward.jpg' %}" alt="" class="w-full m-auto rounded-[10px]">
-              </div>
-              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
-                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">РОНА</div>
-                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">идеальное решение для уютного интерьера</div>
-              </div>
-            </div>
-            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
-              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">15 100 ₽/шт</div>
-              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">
-                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
-                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
-              </div>
-            </div>
-          </div>
-          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-            <div class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;"">
-              <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
-            </div>
-            <div class="flex w-full gap-1">
-              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
-                <img src="{% static 'img/chair.jpg' %}" alt="" class="w-full m-auto rounded-[10px]">
-              </div>
-              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
-                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">SCANDICA</div>
-                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">ваш комфорт и удобство - scandica</div>
-              </div>
-            </div>
-            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
-              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
-              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">
-                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
-                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
-              </div>
-            </div>
-          </div>
-          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
-            <div class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;">
-              <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
-            </div>
-            <div class="flex w-full gap-1">
-              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
-                <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
-              </div>
-              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
-                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">ПАРМА</div>
-                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
-              </div>
-            </div>
-            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
-              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
-              <div class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">
-                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
-                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
-              </div>
-            </div>
-          </div>
+        <div id="product-list" class="grid grid-cols-1 gap-3 ">
         </div>
       </div>
 
@@ -672,6 +567,61 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
   <script type="module" src="{% static 'js/builder.js' %}"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/compiledJsonProducts/')
+            .then(response => response.json())
+            .then(data => {
+                const productList = document.getElementById('product-list');
+                data.forEach(product => {
+                    const productItem = document.createElement('div');
+                    productItem.innerHTML = `
+                      <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                        <div @click="infoPanel = true; if (window.innerWidth < 1024) controlPanel = false" class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;">
+                          <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
+                        </div>
+                        <div class="flex w-full gap-1">
+                          <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] bg-white rounded-[10px]">
+                            <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
+                          </div>
+                          <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+                            <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">${product.product_name}</div>
+                            <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">${product.product_short_description}</div>
+                          </div>
+                        </div>
+                        <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+                          <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">13 990 ₽/шт</div>
+                          <button data-id="${product.unique_id}" class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200 add-to-cart" style="cursor: pointer;">
+                            <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+                            <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                    productList.appendChild(productItem);
+                });
+            });
+    });
+    $(document).on('click', '.add-to-cart', function() {
+      console.log('add')
+        let itemId = $(this).data('id');
+        $.ajax({
+            type: "POST",
+            url: "{% url 'add_to_cart' %}",
+            data: {
+                item_id: itemId,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Товар добавлен в корзину!');
+                }
+            }
+        });
+    });
+  </script>
+
   <script>
     function updateScrollbarClass() {
         if (window.innerWidth < 1440) { // Условие для мобильных устройств

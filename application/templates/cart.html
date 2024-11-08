@@ -1,0 +1,38 @@
+<!-- cart.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mx-auto mt-5">
+        <h1 class="text-2xl font-bold">Корзина</h1>
+        <div>
+            {% if cart %}
+            <table>
+                <tr>
+                    <th>Название</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Итого</th>
+                </tr>
+                {% for item_id, item in cart.items %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.total }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            
+            <h3>Общая сумма: {{ total_amount }}</h3>
+            {% else %}
+                <p class="text-gray-500">Ваша корзина пуста.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
