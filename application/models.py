@@ -23,6 +23,7 @@ class Product_Item(models.Model):
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     product_name = models.CharField("Наименование(max 16):", max_length=16, default='')
+    product_icon = models.ImageField("Иконка товара", upload_to="application/static/img/products_icons", blank=True, null=True,)
     product_url = models.CharField("Ссылка на продукт:", max_length=200, default='')
     product_price = models.IntegerField("Цена:", default=0)
     product_material = models.CharField("Материал:", max_length=200, default='')
@@ -44,3 +45,7 @@ class Product_Item(models.Model):
     
     def __str__(self):
         return self.product_name
+    
+class Product_Image(models.Model):
+    product = models.ForeignKey(Product_Item, related_name='images', on_delete=models.CASCADE, default='')
+    image = models.ImageField(upload_to='application/static/img/products_images', blank=True, null=True,)
