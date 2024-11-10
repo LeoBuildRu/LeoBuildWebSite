@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .models import *
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 
 # Create your views here.
 
@@ -14,22 +15,31 @@ def builder_page(request):
     return render(request, 'builder.html')
 
 def get_products(request):
-    products = Product_Item.objects.all().values('unique_id', 'product_name', 'product_icon', 'product_url', 'product_price', 'product_material', 'product_height', 'product_width', 'product_depth', 'product_short_description', 'product_description', 'product_categories', 'product_company', 'created_date')
-    
+
+    category_name = request.GET.get('category')
+    company_name = request.GET.get('company')
+
+    category = Furniture_Categorie.objects.get(furniture_name__iexact=category_name)
+    company = Company_Furniture.objects.get(company_name__iexact=company_name)
+
+    products = Product_Item.objects.filter(
+    product_categories=category,
+    product_company=company
+    ).values(
+        'unique_id', 'product_name', 'product_icon', 'product_url', 
+        'product_price', 'product_material', 'product_height', 
+        'product_width', 'product_depth', 'product_short_description', 
+        'product_description', 'created_date'
+    )
+
     post_products = []
     for product in products:
         product_item = Product_Item.objects.get(unique_id=product['unique_id'])
         images = [img.image.url for img in product_item.images.all()]  # Получаем URL изображений
         product['product_images'] = images
         post_products.append(product)
-        
-    # print(post_products)
-    # for product in post_products:
-    #     print(f"Продукт: {product['product_name']}")
-    #     for image in product['product_images']:
-    #         print(f"{image}")
 
-    return JsonResponse(list(post_products), safe=False)
+    return JsonResponse(post_products, safe=False)
 
 def add_to_cart(request):
     if request.method == 'POST':
@@ -97,13 +107,14 @@ def get_item_info(request):
         'height': str(item.product_height),
         'width': str(item.product_width),
         'depth': str(item.product_depth),
+        'url': str(item.product_url),
+        'company': str(item.product_company),
     }
     return JsonResponse(context)  # или любой другой атрибут
 
 def get_cart_info(request):
     cart = request.session.get('cart', {})
     total_amount = 0  # Переменная для хранения общей суммы
-    print(cart)
 
     # Проходим по каждому элементу в корзине и вычисляем сумму
     for item_id, item_data in cart.items():
@@ -119,3 +130,36 @@ def get_cart_info(request):
         'total_amount': total_amount,  # Добавляем общую сумму в контекст
     }
     return JsonResponse(context)  # или любой другой атрибут
+
+def get_company(request):
+    category_name = request.GET.get('category')
+    companies_data = []
+
+    if category_name:
+        try:
+            category = Furniture_Categorie.objects.get(furniture_name__iexact=category_name)
+            companies = category.furniture_companies.all()
+            for company in companies:
+                companies_data.append({
+                    'company_name': company.company_name,
+                    'logo_url': company.company_logo.url,  # предполагается, что это правильный путь к изображению
+                })
+        except Furniture_Categorie.DoesNotExist:
+            return JsonResponse({'error': 'Категория не найдена'}, status=404)
+
+    return JsonResponse(companies_data, safe=False)  # возвращаем данные в формате JSON
+
+def search_product(request):
+    if 'term' in request.GET:
+        query = request.GET.get('term')
+        products = Product_Item.objects.filter(Q(product_name__icontains=query))
+        results = []
+        for product in products:
+            results.append({
+                'id': str(product.unique_id),
+                'name': product.product_name,
+                'price': product.product_price,
+                'icon_url': product.product_icon.url if product.product_icon else None,
+            })
+        return JsonResponse(results, safe=False)
+    return JsonResponse([], safe=False)

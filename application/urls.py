@@ -9,4 +9,6 @@ urlpatterns = [
     path('api/compiledJsonProducts/', views.get_products, name='get_products'),
     path('get-item-info/', views.get_item_info, name='get_item_info'),
     path('get-cart-info/', views.get_cart_info, name='get_cart_info'),
+    path('get_company/', views.get_company, name='get_company'),
+    path('search/', views.search_product, name='search_product'),
 ]

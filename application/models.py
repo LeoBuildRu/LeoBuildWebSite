@@ -4,12 +4,6 @@ import uuid
 import random
 
 # Create your models here.
-
-class Furniture_Categorie(models.Model):
-    furniture_name = models.CharField(max_length=200, default='')
-
-    def __str__(self):
-        return self.furniture_name
     
 class Company_Furniture(models.Model):
     company_name = models.CharField(max_length=200, default='')
@@ -17,6 +11,13 @@ class Company_Furniture(models.Model):
 
     def __str__(self):
         return self.company_name
+
+class Furniture_Categorie(models.Model):
+    furniture_name = models.CharField(max_length=200, default='')
+    furniture_companies = models.ManyToManyField(Company_Furniture, blank=True, default='')
+
+    def __str__(self):
+        return self.furniture_name
 
 class Product_Item(models.Model):
 
