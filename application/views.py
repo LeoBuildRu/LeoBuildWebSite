@@ -152,12 +152,13 @@ def get_company(request):
 def search_product(request):
     if 'term' in request.GET:
         query = request.GET.get('term')
-        products = Product_Item.objects.filter(Q(product_name__icontains=query))
+        products = Product_Item.objects.filter(Q(product_searchTag__icontains=query))
         results = []
         for product in products:
             results.append({
-                'id': str(product.unique_id),
+                'id': product.unique_id,
                 'name': product.product_name,
+                'description': product.product_short_description,
                 'price': product.product_price,
                 'icon_url': product.product_icon.url if product.product_icon else None,
             })

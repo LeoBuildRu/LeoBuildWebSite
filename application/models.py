@@ -24,6 +24,7 @@ class Product_Item(models.Model):
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     product_name = models.CharField("Наименование(max 16):", max_length=16, default='')
+    product_searchTag = models.CharField("Наименование в нижнем регистре(max 16):", max_length=16, default='')
     product_icon = models.ImageField("Иконка товара", upload_to="application/static/img/products_icons", blank=True, null=True,)
     product_url = models.CharField("Ссылка на продукт:", max_length=200, default='')
     product_price = models.IntegerField("Цена:", default=0)

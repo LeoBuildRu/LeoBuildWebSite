@@ -391,30 +391,7 @@
       <div :class="searchTab ? 'h-full' : 'h-[180px]'" x-show="searchTab" x-data="transitions" x-bind="opacityTransition" x-on:click.away="searchTab = false" class="flex w-full desktop:h-[250px] mt-[15px] large-desktop:mt-[20px] p-2 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
         <div id="searchTab-id" class="flex flex-col w-full h-full desktop:pr-[8px] gap-y-2 desktop:gap-y-3 custom-scroll custom-scroll-track-1 masked-overflow mask-image-1">
         <!--
-          <div class="flex w-full gap-1.5 desktop:gap-3">
-            <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
-              <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
-            </div>
-            <div class="relative laptop:flex flex-1 h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] px-2.5 desktop:px-3 py-1 laptop:py-0.5 desktop:py-2 bg-white rounded-[10px]">
-              <div class="flex flex-col h-full text-left">
-                <div class="text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Bold] tracking-[0.07rem]">ПАРМА</div>
-                <div class="w-[220px] laptop:w-[170px] desktop:w-[220px] mt-0 laptop:-mt-1 desktop:mt-auto text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">диван-кровать парма строгий и элегантный</div>
-              </div>
-              <div class="flex laptop:flex-col w-full laptop:w-auto laptop:h-full ml-auto -mt-[25px] laptop:-mt-0 font-[Jost-Medium] tracking-[0.07rem]">
-                <div class="flex text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px]">
-                  <div class="mr-4">25 990 ₽/шт</div>
-                  <div @click="infoPanel = true, searchTab = false" class="group hidden laptop:flex flex-col w-min whitespace-nowrap hover:opacity-50 opacity-30 transition-all ease-in-out duration-200" style="cursor: pointer;">
-                    <div>info</div>
-                    <div class="w-full h-[1.5px] -mt-[5px] bg-black"></div>
-                  </div>
-                </div>
-                <div class="ml-auto -mt-0.5 laptop:mt-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">добавить</div>
-              </div>
-              <div @click="infoPanel = true, searchTab = false" class="group flex laptop:hidden absolute right-0 top-0 mr-[10px] mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200" style="cursor: pointer;">
-                <div class="w-min h-min m-auto text-white group-hover:text-black font-[Jost-Bold]">i</div>
-              </div>
-            </div>
-          </div>
+          
           <div class="flex w-full gap-1.5 desktop:gap-3">
             <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
               <img src="{% static 'img/parma.webp' %}" alt="" class="w-full m-auto rounded-[10px]">
@@ -702,8 +679,8 @@
     const searchResults = document.getElementById('searchTab-id');
 
     searchInput.addEventListener('input', function() {
-        const query = searchInput.value;
-
+        const query = searchInput.value.toLowerCase(); // Преобразуем в нижний регистр
+        console.log(query)
         if (query.length < 1) {
             searchResults.innerHTML = '';
             return;
@@ -716,10 +693,31 @@
                 if (data.length > 0) {
                     data.forEach(product => {
                         const resultItem = document.createElement('div');
-                        resultItem.className = 'border p-2 mt-1 rounded';
                         resultItem.innerHTML = `
-                            <img src="${product.icon_url}" alt="${product.name}" class="w-10 h-10 inline mr-2">
-                            <strong>${product.name}</strong> - ${product.price} руб.
+                            <div class="flex w-full gap-1.5 desktop:gap-3">
+                              <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
+                                <img src="../${product.icon_url.replace('application/', '')}" alt="" class="w-full m-auto rounded-[10px]">
+                              </div>
+                              <div class="relative laptop:flex flex-1 h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] px-2.5 desktop:px-3 py-1 laptop:py-0.5 desktop:py-2 bg-white rounded-[10px]">
+                                <div class="flex flex-col h-full text-left">
+                                  <div class="text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Bold] tracking-[0.07rem]">${product.name}</div>
+                                  <div class="w-[220px] laptop:w-[170px] desktop:w-[220px] mt-0 laptop:-mt-1 desktop:mt-auto text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">${product.description}</div>
+                                </div>
+                                <div class="flex laptop:flex-col w-full laptop:w-auto laptop:h-full ml-auto -mt-[25px] laptop:-mt-0 font-[Jost-Medium] tracking-[0.07rem]">
+                                  <div class="flex text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px]">
+                                    <div class="mr-4">${product.price} ₽/шт</div>
+                                    <button data-id="${product.id}" @click="infoPanel = true, searchTab = false" class="group hidden laptop:flex flex-col w-min whitespace-nowrap hover:opacity-50 opacity-30 transition-all ease-in-out duration-200 info-btn" style="cursor: pointer;">
+                                      <div>info</div>
+                                      <div class="w-full h-[1.5px] -mt-[5px] bg-black"></div>
+                                    </button>
+                                  </div>
+                                  <div class="ml-auto -mt-0.5 laptop:mt-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] hover:opacity-70 transition-all ease-in-out duration-200" style="cursor: pointer;">добавить</div>
+                                </div>
+                                <button data-id="${product.id}" @click="infoPanel = true, searchTab = false" class="group flex laptop:hidden absolute right-0 top-0 mr-[10px] mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200 info-btn" style="cursor: pointer;">
+                                  <div class="w-min h-min m-auto -mt-0.5 text-white group-hover:text-black font-[Jost-Bold]">i</div>
+                                </button>
+                              </div>
+                            </div>
                         `;
                         searchResults.appendChild(resultItem);
                     });
