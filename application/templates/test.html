@@ -1,0 +1,786 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <link href="{% static 'fonts/font.css' %}" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/7.32.0/babylon.min.js" integrity="sha512-2NHW2Qpaaox7mO2Mu4/LBrqJH3MNtsJOVn/Db6GKh++iCy4RqE+EuC84CEY18NABsI+MjY8NggXVhQpEGLiIDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{% static 'node_modules/babylonjs-loaders/babylonjs.loaders.min.js' %}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
+    <script type="module" src="{% static 'js/builder.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <title>Babylon.js и Tailwind CSS</title>
+    <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+    
+        canvas {
+          display: block; /* Убирает пробелы между элементами */
+          width: 100%;
+          height: 100%;
+          outline: 0;
+        }
+
+        .mask-image-1 {
+          --mask-image-content: linear-gradient(
+              to bottom,
+              transparent,
+              black 0%,
+              black 80%,
+              transparent
+          );
+        }
+
+        .mask-image-2 {
+          --mask-image-content: linear-gradient(
+              to bottom,
+              transparent,
+              black 0%,
+              black 90%,
+              transparent
+          );
+        }
+
+        .masked-overflow {
+          /* scroll bar width, for use in mask calculations */
+          --scrollbar-settings-width: 12px;
+
+          /* mask fade distance, for use in mask calculations */
+          --mask-height: 36px;
+
+          /* If content exceeds height of container, overflow! */
+          overflow-y: auto;
+
+          /* Need to make sure container has bottom space,
+        otherwise content at the bottom is always faded out */
+          padding-bottom: var(--mask-height);
+
+          /* Keep some space between content and scrollbar */
+
+          /* The CSS mask */
+
+          /* Here we scale the content gradient to the width of the container 
+        minus the scrollbar width. The height is the full container height */
+          --mask-size-content: calc(100% - var(--scrollbar-settings-width)) 100%;
+
+          /* The scrollbar mask is a black pixel */
+          --mask-image-scrollbar: linear-gradient(black, black);
+
+          /* The width of our black pixel is the width of the scrollbar.
+        The height is the full container height */
+          --mask-size-scrollbar: var(--scrollbar-settings-width) 100%;
+
+          /* Apply the mask image and mask size variables */
+          mask-image: var(--mask-image-content), var(--mask-image-scrollbar);
+          mask-size: var(--mask-size-content), var(--mask-size-scrollbar);
+
+          /* Position the content gradient in the top left, and the 
+        scroll gradient in the top right */
+          mask-position: 0 0, 100% 0;
+
+          /* We don't repeat our mask images */
+          mask-repeat: no-repeat, no-repeat;
+        }
+
+
+        .custom-scroll-scrollbar-1::-webkit-scrollbar {
+            width: 12px; /* Ширина скроллбара */
+        }
+        .custom-scroll-scrollbar-2::-webkit-scrollbar {
+            width: 0px; /* Ширина скроллбара */
+        }
+
+        .custom-scroll-track-1::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
+            border-radius: 12px; /* Закругленные углы полосы */
+        }
+
+        .custom-scroll-track-2::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
+            border-radius: 12px; /* Закругленные углы полосы */
+            margin-bottom: 150px;
+        }
+
+        .custom-scroll-track-3::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.7); /* Фон полосы скролла */
+            border-radius: 12px; /* Закругленные углы полосы */
+            margin-top: 0.5rem;
+            margin-bottom: 50px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            width: 12px;
+            background-color: rgba(0, 0, 0, 0.2);; /* Темно-серый цвет для ползунка */
+            border-radius: 12px; /* Закругленные углы для ползунка */
+            border: 2px solid rgba(255, 255, 255, 1);;
+        }
+
+        /* Убираем стрелки */
+        .custom-scroll::-webkit-scrollbar-button {
+            display: none; /* Скрыть стрелки */
+        }
+
+        input[type=range][orient=vertical] {
+            writing-mode: vertical-lr;
+            direction: rtl;
+            appearance: slider-vertical;
+            width: 16px;
+            vertical-align: bottom;
+        }
+
+        .dots {
+            flex: 1; /* Заполняем свободное пространство */
+            border-bottom: 1.5px dotted black; /* Создаем линию из точек */
+            margin: 0 5px; /* Отступы сбоку от текста */
+        }
+    </style>
+</head>
+<body x-data="{ configurator: true, companyChoise: false, targetCompany: false, targetClass: false, searchTab: false, infoPanel: false, controlPanel: true, showUI: false }" x-init="controlPanel = window.innerWidth > 1024" @resize.window="controlPanel = window.innerWidth > 1024" class="">
+
+    <section x-show="controlPanel" class="absolute z-20 overflow-hidden flex flex-col w-full laptop:w-[310px] desktop:w-[340px] large-desktop:w-[370px] h-full laptop:h-[calc(100%-20px)] desktop:h-[calc(100%-40px)] large-desktop:h-[calc(100%-60px)] laptop:m-[10px] desktop:m-[20px] large-desktop:m-[30px] p-2.5 large-desktop:p-4 bg-gradient-to-t from-[#FFEAFF]/70 to-[#C0FFFB]/70 laptop:border-[3px] border-white backdrop-blur-[4px] laptop:rounded-[20px]">
+      <img src="{% static 'img/builder-page-photo-1.png' %}" alt="" class="absolute bottom-0 left-0 w-[320px] large-desktop:w-[370px] -ml-[50px] mb-[20px] large-desktop:mb-[40px] opacity-60">
+      <div class="flex w-full h-auto mt-[66px] laptop:mt-0 py-1.5 bg-white rounded-[14px]">
+        <img src="{% static 'img/builder-page-logo-1.png' %}" alt="" class="w-[220px] laptop:w-[200px] desktop:w-[220px] large-desktop:w-[250px] mx-auto">
+      </div>
+
+      <div class="flex flex-col w-full mt-[12px] large-desktop:mt-[15px]">
+        <div x-show="configurator">
+          <div class="group flex w-full">
+            <a href="../" class="text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] group-hover:opacity-70 font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.4rem] large-desktop:leading-[1.6rem]">перейти на главную</a>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] laptop:w-[17px] large-desktop:w-[18px] h-[18px] laptop:h-[17px] large-desktop:h-[18px] mt-auto ml-auto group-hover:mr-0 mr-0.5 transition-all ease-in-out duration-200">
+          </div>
+          <div class="w-full h-[2px] mt-[6px] bg-black opacity-70 "></div>
+        </div>
+        <div  x-show="companyChoise">
+          <div @click="companyChoise = false, configurator = true" class="group flex w-full" style="cursor: pointer;">
+            <div class="text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] group-hover:opacity-70 font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.4rem] large-desktop:leading-[1.6rem]">к конфигуратору</div>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] laptop:w-[17px] large-desktop:w-[18px] h-[18px] laptop:h-[17px] large-desktop:h-[18px] mt-auto ml-auto group-hover:mr-0 mr-0.5 transition-all ease-in-out duration-200">
+          </div>
+          <div class="w-full h-[2px] mt-[6px] bg-black opacity-70"></div>
+          <div class="flex w-full h-[40px] mt-[25px] large-desktop:mt-[35px] bg-white text-[20px] laptop:text-[17px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Light] tracking-[0.07rem] rounded-[12px] large-desktop:rounded-[14px]">
+            <div id="category-name" class="mx-auto my-auto"></div>
+          </div>
+        </div>
+        <div x-show="targetCompany">
+          <div @click="targetCompany = false, companyChoise = true" class="group flex w-full" style="cursor: pointer;">
+            <div class="text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] group-hover:opacity-70 font-[Jost-ExtraLight] tracking-[0.07rem] leading-[1.4rem] large-desktop:leading-[1.6rem]">к компаниям</div>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[18px] laptop:w-[17px] large-desktop:w-[18px] h-[18px] laptop:h-[17px] large-desktop:h-[18px] mt-auto ml-auto group-hover:mr-0 mr-0.5 transition-all ease-in-out duration-200">
+          </div>
+          <div class="w-full h-[2px] mt-[6px] bg-black opacity-70"></div>
+          <div class="flex w-full h-[40px] mt-[25px] large-desktop:mt-[35px] bg-white text-[20px] laptop:text-[17px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Light] tracking-[0.07rem] rounded-[12px] large-desktop:rounded-[14px]">
+            <div id="company-name" class="mx-auto my-auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div x-show="configurator" x-data="transitions" x-bind="opacityTransition" class="mt-[25px] mb-4 pr-[8px] large-desktop:mt-[35px] custom-scroll custom-scroll-scrollbar-1 custom-scroll-track-2 masked-overflow mask-image-2">
+        <!--<div id="saveScene">сохранить</div>-->
+        <!--<div id="loadScene">загрузить</div>-->
+        <div class="flex flex-col w-full pb-[20px] bg-white bg-opacity-70 rounded-[12px] large-desktop:rounded-[14px]">
+          <div class="w-full bg-white py-1 text-center text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Medium] tracking-[0.07rem] rounded-[12px] large-desktop:rounded-[14px]">КОНФИГУРАТОР</div>
+          <div class="flex flex-col w-full mt-[16px] large-desktop:mt-[20px] px-[12px] large-desktop:px-[16px]">
+            <div class="text-[15px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ШИРИНА СТЕНЫ</div>
+            <div class="flex w-full mt-[4px]">
+              <img src="{% static 'img/width.png' %}" alt="" class="w-[32px] laptop:w-[27px] desktop:w-[30px] large-desktop:w-[32px] h-[32px] laptop:h-[27px] desktop:h-[30px] large-desktop:h-[32px] my-auto">
+              <div class="flex flex-1 ml-[10px] desktop:ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
+                <div class="flex whitespace-nowrap my-auto text-[16px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] font-[Jost-Medium]">
+                  <input id="wall-width-value" min="0" max="5" class="w-[35px] text-center outline-none" placeholder="1.00" step="0.01">
+                  <div class="ml-1">м</div>
+                </div>
+                <input id="wall-width-range" min="0" max="5" type="range" class="ml-3 w-full" step="0.01">
+              </div>
+              <div id="wall-width-accept" class="flex bg-white w-[38px] h-[38px] ml-[7px] desktop:ml-[10px] hover:bg-opacity-70 border-white border-[3.5px] text-[16px] laptop:text-[12px] desktop:text-[14px] large-desktop:text-[16px] font-[Jost-Medium] rounded-[8px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+                <div class="w-min h-min mx-auto my-auto">OK</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col w-full mt-[10px] large-desktop:mt-[14px] px-[12px] large-desktop:px-[16px]">
+            <div class="text-[15px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] text-black text-opacity-20 font-[Jost-SemiBold] tracking-[0.05rem]">ВЫСОТА СТЕНЫ</div>
+            <div class="flex w-full mt-[4px]">
+              <img src="{% static 'img/height.png' %}" alt="" class="w-[32px] laptop:w-[27px] desktop:w-[30px] large-desktop:w-[32px] h-[32px] laptop:h-[27px] desktop:h-[30px] large-desktop:h-[32px] my-auto">
+              <div class="flex flex-1 ml-[10px] desktop:ml-[16px] py-[8px] px-[8px] bg-white rounded-[8px]">
+                <div class="flex whitespace-nowrap my-auto text-[16px] laptop:text-[14px] desktop:text-[15px] large-desktop:text-[16px] font-[Jost-Medium]">
+                  <input id="wall-height-value" min="0" max="7" class="w-[35px] text-center outline-none" placeholder="3.00" step="0.01">
+                  <div class="ml-1">м</div>
+                </div>
+                <input id="wall-height-range" min="0" max="7" type="range" class="ml-3 w-full" step="0.01">
+              </div>
+              <div id="wall-height-accept" class="flex bg-white w-[38px] h-[38px] ml-[7px] desktop:ml-[10px] hover:bg-opacity-70 border-white border-[3.5px] text-[16px] laptop:text-[12px] desktop:text-[14px] large-desktop:text-[16px] font-[Jost-Medium] rounded-[8px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+                <div class="w-min h-min mx-auto my-auto">OK</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-[10px] w-full mt-[10px]">
+          <div id="CreateWall" class="w-full bg-white pt-1 laptop:pt-0.5 pb-2 laptop:pb-1.5 hover:bg-opacity-70 border-white border-[3.5px] text-center text-[20px] laptop:text-[17px] desktop:text-[20px] large-desktop:text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.1rem] large-desktop:leading-[1.3rem] rounded-[10px] transition-all ease-in-out duration-200" style="cursor: pointer;">создать<br>
+            стены</div> 
+          <div id="CreateFloor" class="w-full bg-white pt-1 laptop:pt-0.5 pb-2 laptop:pb-1.5 hover:bg-opacity-70 border-white border-[3.5px] text-center text-[20px] laptop:text-[17px] desktop:text-[20px] large-desktop:text-[23px] font-[Jost-Medium] text-black text-opacity-70 tracking-[0.02rem] leading-[1.1rem] large-desktop:leading-[1.3rem] rounded-[10px] transition-all ease-in-out duration-200" style="cursor: pointer;">создать<br>
+            пол</div>
+        </div>
+        <div class="flex flex-col w-full mt-[20px] desktop:mt-[25px] large-desktop:mt-[35px]">
+          <div class="text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КАТАЛОГ</div>
+          <div class="flex flex-col w-full gap-[6px] desktop:gap-[10px] mt-[4px] desktop:mt-[2px] large-desktop:mt-[6px]">
+            <button data-category="МЕБЕЛЬ" class="get-company">
+              <div @click="configurator = false, companyChoise = true" class="group flex w-full gap-[8px] desktop:gap-[12px]" style="cursor: pointer;">
+                <div class="p-2 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <img src="{% static 'img/catalog-icon-1.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+                </div>
+                <div class="flex flex-1 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">МЕБЕЛЬ</div>
+                </div>
+              </div>
+            </button>
+            <button data-category="ОКНА" class="get-company">
+              <div @click="configurator = false, companyChoise = true" class="group flex w-full gap-[8px] desktop:gap-[12px]" style="cursor: pointer;">
+                <div class="p-2 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <img src="{% static 'img/catalog-icon-2.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+                </div>
+                <div class="flex flex-1 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОКНА</div>
+                </div>
+              </div>
+            </button>
+            <button data-category="ДВЕРИ" class="get-company">
+              <div @click="configurator = false, companyChoise = true" class="group flex w-full gap-[8px] desktop:gap-[12px]" style="cursor: pointer;">
+                <div class="p-2 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <img src="{% static 'img/catalog-icon-3.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+                </div>
+                <div class="flex flex-1 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ДВЕРИ</div>
+                </div>
+              </div>
+            </button>
+            <button data-category="ОБОИ" class="get-company">
+              <div @click="configurator = false, companyChoise = true" class="group flex w-full gap-[8px] desktop:gap-[12px]" style="cursor: pointer;">
+                <div class="p-2 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <img src="{% static 'img/catalog-icon-4.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+                </div>
+                <div class="flex flex-1 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ОБОИ</div>
+                </div>
+              </div>
+            </button>
+            <button data-category="ПОЛ" class="get-company">
+              <div @click="configurator = false, companyChoise = true" class="group flex w-full gap-[8px] desktop:gap-[12px]" style="cursor: pointer;">
+                <div class="p-2 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <img src="{% static 'img/catalog-icon-5.png' %}" alt="" class="w-[24px] laptop:w-[22px] desktop:w-[25px] large-desktop:w-[28px] h-[24px] laptop:h-[22px] desktop:h-[25px] large-desktop:h-[28px]">
+                </div>
+                <div class="flex flex-1 bg-white group-hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200">
+                  <div class="my-auto mx-auto text-[19px] laptop:text-[17px] desktop:text-[19px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem]">ПОЛ</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div x-show="companyChoise" x-data="transitions" x-bind="opacityTransition" class="flex flex-col w-full mt-[15px] custom-scroll custom-scroll-scrollbar-2 desktop:custom-scroll-scrollbar-1 custom-scroll-track-1 masked-overflow mask-image-1">
+        <div id="companies-list" class="grid grid-cols-2 tablet-small:grid-cols-3 tablet:grid-cols-4 laptop:grid-cols-2 gap-2">
+
+        </div>
+      </div>
+
+      <div id="companyClasses-id" x-show="targetClass" x-data="transitions" x-bind="opacityTransition" class="flex flex-col w-[calc(100%+0.5rem)] mt-[15px] mb-4 -ml-2 pt-2 pl-2 desktop:pr-[8px] custom-scroll custom-scroll-track-3 masked-overflow mask-image-2">
+        <div id="class-list" class="grid grid-cols-1 gap-3 ">
+
+        </div>
+      </div>
+
+      <div id="targetCompany-id" x-show="targetCompany" x-data="transitions" x-bind="opacityTransition" class="flex flex-col w-[calc(100%+0.5rem)] mt-[15px] mb-4 -ml-2 pt-2 pl-2 desktop:pr-[8px] custom-scroll custom-scroll-track-3 masked-overflow mask-image-2">
+        <div id="product-list" class="grid grid-cols-1 gap-3 ">
+
+        </div>
+      </div>
+
+      <div class="flex flex-col w-full mt-auto pt-[0px]">
+        <div class="text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[18px] font-[Jost-SemiBold] tracking-[0.1rem]">КОРЗИНА</div>
+        <div class="relative flex flex-col w-full h-[140px] desktop:h-[245px] large-desktop:h-[290px] mt-[7px] large-desktop:mt-[10px] p-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+          <img src="{% static 'img/shopping-cart.png' %}" alt="" class="absolute w-[160px] left-0 right-0 mx-auto top-0 bottom-0 my-auto hidden">
+          <div id="cart-list" class="flex flex-col gap-y-1.5 large-desktop:gap-y-2 w-[calc(100%+0.75rem)] h-full pr-[12px] custom-scroll-scrollbar-2 masked-overflow mask-image-1">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section @click="controlPanel = !controlPanel" :class="controlPanel ? 'top-0 mt-[10px]' : 'bottom-0'" class="absolute laptop:hidden z-30 w-full h-[56px] px-[10px] pb-[10px]">
+      <div class="flex w-full h-full bg-white px-[16px] rounded-[12px]">
+        <div class="my-auto font-[Jost-Medium] text-[19px] tracking-[0.07rem]">ПАНЕЛЬ УПРАВЛЕНИЯ</div>
+        <img x-show="!controlPanel" src="{% static 'img/arrow-up.png' %}" alt="" class="w-auto h-[20px] ml-auto my-auto">
+        <img x-show="controlPanel" src="{% static 'img/arrow-up.png' %}" alt="" class="w-auto h-[20px] ml-auto my-auto rotate-180">
+      </div>
+    </section>
+
+    <section x-show="infoPanel" x-data="transitions" x-bind="opacityTransition" class="absolute z-40 w-full h-full  bg-white bg-opacity-50">
+      <div x-on:click.away="infoPanel = false" class="absolute left-0 right-0 mx-auto top-0 bottom-0 flex flex-col my-auto w-[calc(100%-20px)] tablet-small:w-[400px] laptop:w-[360px] desktop:w-[400px] large-desktop:w-[430px] h-[590px] laptop:h-[520px] desktop:h-[590px] large-desktop:h-[620px] p-2.5 large-desktop:p-4 bg-white bg-opacity-50 border-[3px] border-white backdrop-blur-[2px] rounded-[16px]">
+        <div class="flex w-full gap-3">
+          <div class="flex flex-1 px-4 bg-white rounded-[8px]">
+            <div id="title-content" class="my-auto text-[22px] laptop:text-[20px] desktop:text-[22px] large-desktop:text-[24px] font-[Jost-Bold]"></div>
+          </div>
+          <div @click="infoPanel = false" class="group w-[45px] laptop:w-[40px] desktop:w-[45px] large-desktop:w-[50px] h-[45px] laptop:h-[40px] desktop:h-[45px] large-desktop:h-[50px] p-3 desktop:p-4 bg-[#FF0000] bg-opacity-40 hover:bg-opacity-50 rounded-[8px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+            <img src="{% static 'img/cancel.png' %}" alt="" class="w-full m-auto">
+          </div>
+        </div>
+        <div class="flex flex-col w-full h-[430px] laptop:h-[380px] desktop:h-[430px] large-desktop:h-[460px] mt-3 pr-[12px] custom-scroll custom-scroll-scrollbar-1 custom-scroll-track-2 masked-overflow mask-image-2 overflow-x-hidden">
+          <div class="swiper-container mySwiper">
+            <div class="swiper-wrapper" id="product-swiper">
+                <!-- Изображения будут добавлены сюда динамически -->
+            </div>
+            <div class="swiper-pagination"></div>
+          </div>
+          <div class="mt-2 text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-SemiBold] tracking-[0.07rem] opacity-50">описание</div>
+          <div id="info-content" class="text-[17px] laptop:text-[16px] desktop:text-[17px] large-desktop:text-[18px] font-[Jost-Light] tracking-[0.04rem]"></div>
+          <div class="mt-2 text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-SemiBold] tracking-[0.07rem] opacity-50">характеристики</div>
+          <div class="flex flex-col w-full mt-3 pb-[18px] gap-3">
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">цена</div>
+              <span class="dots"></span>
+              <div class="flex mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">
+                <div id="price-content"></div>
+                <div>₽</div>
+              </div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">материал</div>
+              <span class="dots"></span>
+              <div id="material-content" class="mt-[1px] text-[20px] laptop:text-[18px] large-desktop:text-[20px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]"></div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">высота</div>
+              <span class="dots"></span>
+              <div class="flex mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">
+                <div id="height-content"></div>
+                <div> м</div>
+              </div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">ширина</div>
+              <span class="dots"></span>
+              <div class="flex mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">
+                <div id="width-content"></div>
+                <div> м</div>
+              </div>
+            </div>
+            <div class="flex w-full">
+              <div class="text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">длина</div>
+              <span class="dots"></span>
+              <div class="flex mt-[1px] text-[18px] laptop:text-[17px] desktop:text-[18px] font-[Jost-Light] tracking-[0.07rem] leading-[1rem]">
+                <div id="depth-content"></div>
+                <div> м</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="group flex w-full h-[40px] large-desktop:h-[45px] mt-auto p-1 bg-center bg-cover rounded-[8px]" style="background-image: url({% static 'img/builder-page-photo-2.png' %}); cursor: pointer;">
+          <a id="url-content" href="" class="flex w-full h-full px-2 bg-white rounded-[6px] bg-opacity-50">
+            <div id="company-content" class="my-auto text-[20px] laptop:text-[19px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-SemiBold] opacity-70 group-hover:opacity-100 transition-all ease-in-out duration-200">HOFF</div>
+            <img src="{% static 'img/arrow-right.png' %}" alt="" class="w-[22px] laptop:w-[20px] desktop:w-[22px] large-desktop:w-[24px] h-[22px] laptop:h-[20px] desktop:h-[22px] large-desktop:h-[24px] my-auto ml-auto group-hover:mr-0 mr-0.5 group-hover:opacity-100 opacity-70 transition-all ease-in-out duration-200">
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section :class="[searchTab ? 'w-full h-screen laptop:h-auto pb-[10px] laptop:pb-0 bg-gradient-to-t laptop:bg-none from-[#FFEAFF]/70 to-[#C0FFFB]/70 backdrop-blur-[4px] laptop:backdrop-blur-[0px] laptop:pl-0 pl-[10px] laptop:pr-0 pr-[10px]' : 'w-[calc(100%-135px)] ml-[10px]', controlPanel ? 'z-10' : 'z-50']" class="absolute top-0 left-0 laptop:right-0 laptop:ml-auto laptop:mx-auto laptop:pl-0 flex flex-col laptop:w-[430px] desktop:w-[680px] large-desktop:w-[800px] pt-[10px] laptop:pt-0 laptop:mt-[10px] desktop:mt-[20px] large-desktop:mt-[30px]">
+      <div class="w-full flex">
+        <div class="flex w-full h-[50px] laptop:h-[40px] desktop:h-[50px] px-2 desktop:px-4 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+          <div @click="searchTab = true" class="flex h-min my-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Medium]">
+            <input id="search-input" :class="searchTab ? 'opacity-100' : 'opacity-50'" class="tracking-[0.09rem] outline-none" type="text" placeholder="Поиск ..." style="background: transparent;">
+          </div>
+          <img src="{% static 'img/search.png' %}" alt="" class="w-[20px] laptop:w-[19px] desktop:w-[22px] large-desktop:w-[24px] h-[20px] laptop:h-[19px] desktop:h-[22px] large-desktop:h-[24px] ml-auto my-auto opacity-50">
+        </div>
+        <div x-show="searchTab && window.innerWidth < 1024" @click="searchTab = false" class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] ml-[10px] p-3 desktop:p-4 bg-[#FF0000] bg-opacity-40 rounded-[8px]">
+          <img src="{% static 'img/cancel.png' %}" alt="" class="w-full m-auto">
+        </div>
+      </div>
+      <div :class="searchTab ? 'h-full' : 'h-[180px]'" x-show="searchTab" x-data="transitions" x-bind="opacityTransition" x-on:click.away="searchTab = false" class="flex w-full desktop:h-[250px] mt-[15px] large-desktop:mt-[20px] p-2 bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <div id="searchTab-id" class="flex flex-col w-full h-full desktop:pr-[8px] gap-y-2 desktop:gap-y-3 custom-scroll custom-scroll-track-1 masked-overflow mask-image-1">
+
+        </div>
+      </div>
+    </section>
+    
+    <section class="absolute z-0 top-0 right-0 flex gap-2 large-desktop:gap-4 m-[10px] desktop:m-[20px] large-desktop:m-[30px]">
+      <div class="hidden laptop:flex h-[40px] desktop:h-[50px] p-[2px] desktop:p-[3px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] font-[Jost-Medium] rounded-[12px]">
+        <div class="my-auto w-[105px] desktop:w-[110px] large-desktop:w-[120px] my-auto text-center text-[16px] desktop:text-[18px] large-desktop:text-[20px] tracking-[0.07rem] leading-[0.9rem] desktop:leading-[1.1rem] large-desktop:leading-[1.2rem]">итоговая стоимость</div>
+        <div class="my-auto text-[32px] leading-[1rem] mt-[4px] desktop:mt-[8px] mr-[8px] large-desktop:mr-[14px]">:</div>
+        <div class="flex w-[135px] desktop:w-[150px] large-desktop:w-[170px] px-2 h-full bg-white rounded-[8px]">
+          <div id="total-sum" class="ml-auto my-auto text-[15px] desktop:text-[16px] large-desktop:text-[18px]">------</div>
+          <div class="my-auto w-[1.5px] h-[20px] bg-black ml-3 mr-1.5"></div>
+          <div class="my-auto text-[15px] desktop:text-[16px] large-desktop:text-[18px]">₽</div>
+        </div>
+      </div>
+      <div class="w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] p-[3.5px] laptop:p-[2.5px] desktop:p-[5px] large-desktop:p-[3px] bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+        <img src="{% static 'img/basket.png' %}" alt="" class="w-full h-full">
+      </div>
+      <div class="w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] p-[3.5px] laptop:p-[2.5px] desktop:p-[5px] large-desktop:p-[3px] bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+        <img src="{% static 'img/account.png' %}" alt="" class="w-full h-full">
+      </div>
+    </section>
+
+    <section class="absolute z-0 top-0 bottom-0 my-auto right-0 flex flex-col h-min mr-[10px] desktop:mr-[20px] large-desktop:mr-[30px]">
+      <div class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] p-[3px] bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+        <div id="ChageTo3D" class="m-auto text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light]">3D</div>
+      </div>
+      <div class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] mt-[8px] p-[3px] bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+        <div id="ChageTo2D" class="m-auto text-[20px] laptop:text-[18px] desktop:text-[20px] large-desktop:text-[22px] font-[Jost-Light]">2D</div>
+      </div>
+      <div id="zoomIn" class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] mt-[30px] p-[13px] laptop:p-[10px] desktop:p-[15px] large-desktop:p-[13px] bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+        <img src="{% static 'img/plus.png' %}" alt="" class="w-full h-full">
+      </div>
+      <div class="flex flex-col w-[50px] laptop:w-[40px] desktop:w-[50px] mt-[8px] py-[8px] bg-white bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px]">
+        <img src="{% static 'img/loop.png' %}" alt="" class="w-[22px] laptop:w-[20px] desktop:w-[22px] large-desktop:w-[24px] h-[22px] laptop:h-[20px] desktop:h-[22px] large-desktop:h-[24px] mx-auto">
+        <input id="zoomRange" min="1" max="8" value="1" step="0.00000000000001" class="mx-auto mt-[12px] mb-[8px]" type="range" orient="vertical" />
+      </div>
+      <div id="zoomOut" class="flex w-[50px] laptop:w-[40px] desktop:w-[50px] h-[50px] laptop:h-[40px] desktop:h-[50px] mt-[8px] p-[13px] laptop:p-[10px] desktop:p-[15px] large-desktop:p-[13px] bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white backdrop-blur-[4px] rounded-[12px] transition-all ease-in-out duration-200" style="cursor: pointer;">
+        <img src="{% static 'img/minus.png' %}" alt="" class="w-full h-full">
+      </div>
+    </section>
+
+    <button id="ChangeUI" x-text="showUI ? 'Show UI' : 'Hide UI'"  x-on:click="showUI = !showUI" class="absolute z-0 laptop:bottom-0 laptop:right-0 flex w-auto h-auto mt-[70px] laptop:mt-0 laptop:mb-[10px] desktop:mb-[20px] large-desktop:mb-[30px] mx-[10px] desktop:mx-[20px] large-desktop:mx-[30px] px-[8px] py-[1px] bg-white border-[3px] border-white rounded-[6px] text-[16px] desktop:text-[18px] large-desktop:text-[20px] font-[Jost-Regular]" style="cursor: pointer;"></button>
+
+
+  <button class="absolute right-0 top-0 w-36 h-12 mt-32 mr-8 bg-white text-center CreateCill" type="WindowMesh">CREATE WIN</button>
+  <button class="hidden absolute right-0 top-0 w-36 h-12 mt-48 mr-8 bg-white text-center CreateCill" type="DefoltMesh">CREATE DEF</button>
+  <canvas id="renderCanvas"></canvas>
+
+  <script>
+
+    $(document).on('click', '.get-classes', function() {
+      var category = $(this).data('category');
+      var company = $(this).data('company');
+      document.getElementById('company-name').innerHTML = company
+      fetch(`/api/compiledJsonProducts/?category=${category}&company=${company}`)
+        .then(response => response.json())
+        .then(data => {
+          const classList = document.getElementById('class-list');
+          $('#class-list').empty();
+          data.forEach(model_class => {
+            const classItem = document.createElement('div');
+            classItem.innerHTML = `
+              <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+                <img src="../${model_class.class_icon.replace('application/', '')}" alt="" class="w-full m-auto rounded-[10px]">
+              </div>
+            `;
+            classList.appendChild(classItem);
+          });
+            // Здесь вы можете обработать полученные данные и отобразить их на странице
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+    });
+
+    //$(document).on('click', '.get-items', function() {
+    //  var category = $(this).data('category');
+    //  var company = $(this).data('company');
+    //  var class_model = $(this).data('class_model');
+    //  document.getElementById('company-name').innerHTML = company
+    //  fetch(`/api/compiledJsonProducts/?category=${category}&company=${company}&class_model=${class_model}`)
+    //    .then(response => response.json())
+    //    .then(data => {
+    //      const productList = document.getElementById('product-list');
+    //      $('#product-list').empty();
+    //      data.forEach(product => {
+    //        const productItem = document.createElement('div');
+    //        productItem.innerHTML = `
+    //          <div class="relative flex flex-col p-1 pb-2 bg-white bg-opacity-70 border-[3px] border-white rounded-[12px]">
+    //            <button @click="infoPanel = true; if (window.innerWidth < 1024) controlPanel = false" class="group absolute left-0 top-0 -ml-2 -mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200 info-btn" data-id="${product.unique_id}" style="cursor: pointer;">
+    //              <div class="w-min h-min m-auto -mt-[2px] group-hover:text-black text-white font-[Jost-Bold]">i</div>
+    //            </button>
+    //            <div class="flex w-full gap-1">
+    //              <div class="flex w-[80px] laptop:w-[70px] desktop:w-[80px] h-[70px] laptop:h-[60px] desktop:h-[70px] overflow-hidden bg-white rounded-[10px]">
+    //                <img src="../${product.product_icon.replace('application/', '')}" alt="" class="w-full m-auto rounded-[10px]">
+    //              </div>
+    //              <div class="flex flex-1 flex-col h-[70px] laptop:h-[60px] desktop:h-[70px] py-1 laptop:py-0.5 desktop:py-1 px-2 bg-white text-right rounded-[10px]">
+    //                <div class="text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Bold]">${product.product_name}</div>
+    //                <div class="laptop:-mt-[2px] text-[17px] laptop:text-[16px] desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[1.1rem] laptop:leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">${product.product_short_description}</div>
+    //              </div>
+    //            </div>
+    //            <div class="flex w-full font-[Jost-Medium] tracking-[0.1rem] whitespace-nowrap">
+    //              <div class="text-[16px] laptop:text-[15px] large-desktop:text-[16px] mt-3 laptop:mt-2 ml-0.5">${product.product_price} ₽/шт</div>
+    //              <button data-id="${product.unique_id}" data-category="${category}" data-company="${company}" class="flex flex-col w-min ml-auto mt-[4px] mr-2.5 hover:opacity-70 transition-all ease-in-out duration-200 add-to-cart" style="cursor: pointer;">
+    //                <div class="text-[18px] laptop:text-[17px] desktop:text-[18px]">добавить</div>
+    //                <div class="w-full h-[2px] -mt-[2px] bg-black"></div>
+    //              </button>
+    //            </div>
+    //          </div>
+    //        `;
+    //        productList.appendChild(productItem);
+    //      });
+    //        // Здесь вы можете обработать полученные данные и отобразить их на странице
+    //    })
+    //    .catch(error => {
+    //        console.error('Ошибка:', error);
+    //    });
+    //});
+
+    $(document).on('click', '.add-to-cart', function() {
+      let itemId = $(this).data('id');
+      let itemCategory = $(this).data('category');
+      let itemCompany = $(this).data('company');
+      $.ajax({
+          type: "POST",
+          url: "{% url 'add_to_cart' %}",
+          data: {
+              item_id: itemId,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            handleProductResponse(response.product, itemCategory);
+            updateCartView(response.cart);
+          }
+      });
+    });
+
+    $(document).ready(function() {
+        // Отправляем AJAX-запрос при загрузке страницы
+        $.ajax({
+            url: '/get-cart-info/', // URL вашего API для получения данных корзины
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                updateCartView(response.cart);
+            },
+        });
+    });
+
+    function updateCartView(cart) {
+      var totalAmount = 0;
+      const cartList = document.getElementById('cart-list');
+      cartList.innerHTML = '';
+      $.each(cart, function(itemId, itemData) {
+        const cartItem = document.createElement('div');
+        cartItem.classList.add("h-min");
+        cartItem.innerHTML = `
+          <div class="flex w-full gap-2">
+            <div class="flex w-[70px] laptop:w-[60px] desktop:w-[70px] large-desktop:w-[80px] h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] overflow-hidden bg-white rounded-[10px]">
+              <img src="../${itemData.icon.replace('application/', '')}" alt="" class="w-full m-auto rounded-[10px]">
+            </div>
+            <div class="flex flex-1 h-[60px] laptop:h-[50px] desktop:h-[60px] large-desktop:h-[70px] py-1 desktop:py-2 px-3 bg-white text-right text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] rounded-[10px]">
+              <div class="flex flex-col text-left">
+                <div class="font-[Jost-Bold] tracking-[0.07rem] opacity-40">${itemData.title}</div>
+                <div class="mt-auto font-[Jost-Medium] tracking-[0.04rem]">${itemData.total}₽</div>
+              </div>
+              <div class="flex flex-col ml-auto text-center font-[Jost-Medium]">
+                <div>${itemData.quantity}</div>
+                <div class="mt-auto">шт</div>
+              </div>
+            </div>
+          </div>
+        `;
+        cartList.appendChild(cartItem);
+        totalAmount += parseFloat(itemData.total);
+      });
+
+      $('#total-sum').text(totalAmount);
+    }
+
+    const swiperWrapper = $('#product-swiper');
+    $(document).on('click', '.info-btn', function() {
+      var itemId = $(this).data('id');
+      $.ajax({
+          url: "/get-item-info/", // URL вашего обработчика, который возвращает информацию об элементе
+          method: 'GET',
+          data: {
+              'item_id': itemId
+          },
+          success: function(data) {
+            
+            document.getElementById('product-swiper').innerHTML = ""; 
+            data.images.forEach(img => {
+                swiperWrapper.append('<div class="swiper-slide"><img class="rounded-[12px]" src="' + img.replace('application/', '') + '" alt="Product Image"></div>');
+            });
+            var swiper = new Swiper(".mySwiper", {
+              spaceBetween: 30,
+              pagination: {
+                el: ".swiper-pagination",
+              },
+            });
+            $('#title-content').text(data.title); // Обновляем содержимое с информацией
+            $('#info-content').text(data.info); // Обновляем содержимое с информацией
+            $('#price-content').text(data.price); // Обновляем содержимое с информацией
+            $('#material-content').text(data.material); // Обновляем содержимое с информацией
+            $('#height-content').text(data.height); // Обновляем содержимое с информацией
+            $('#width-content').text(data.width); // Обновляем содержимое с информацией
+            $('#depth-content').text(data.depth); // Обновляем содержимое с информацией
+            $('#url-content').attr('href', data.url); // Обновляем содержимое с информацией
+            $('#url-content').attr('target', '_blank');
+            $('#company-content').text(data.company); // Обновляем содержимое с информацией
+          }
+      });
+    });
+
+    $(document).on('click', '.get-company', function() {
+        let category = $(this).data('category');
+        document.getElementById('category-name').innerHTML = category
+        $.ajax({
+            url: "/get_company/", // URL обработчика, который возвращает информацию
+            method: 'GET',
+            data: {
+                'category': category
+            },
+            success: function(data) {
+                $('#companies-list').empty(); // Очищаем список компаний перед добавлением новых данных
+                
+                // Предполагаем, что `data` - это массив объектов компаний
+                data.forEach(function(company) {
+                    // Создайте HTML-код для каждой компании
+                    let companyCard = `
+                      <button data-category="${category}" data-company="${company.company_name}" class="get-classes">
+                        <div @click="companyChoise = false, targetCompany = true" 
+                            class="group p-1 bg-white hover:bg-opacity-100 bg-opacity-70 border-[3px] border-white rounded-[12px] transition-all ease-in-out duration-200" 
+                            style="cursor: pointer;">
+                            <div class="flex w-full h-[120px] laptop:h-[80px] desktop:h-[100px] p-2 bg-white bg-opacity-100 rounded-[10px]">
+                                <img src="${company.logo_url.replace('application/', '')}" alt="${company.company_name}" class="w-full m-auto group-hover:scale-95 transition-all ease-in-out duration-200">
+                            </div>
+                        </div>
+                      </button>
+                    `;
+                    // Добавляем карточку компании в список
+                    $('#companies-list').append(companyCard);
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Произошла ошибка: ', error);
+            }
+        });
+    });
+  </script>
+
+  <script>
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('searchTab-id');
+
+    searchInput.addEventListener('input', function() {
+        var category = $(this).data('category');
+        var company = $(this).data('company');
+        const query = searchInput.value.toLowerCase(); // Преобразуем в нижний регистр
+        console.log(query)
+        if (query.length < 1) {
+            searchResults.innerHTML = '';
+            return;
+        }
+
+        fetch(`/search/?term=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                searchResults.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(product => {
+                        const resultItem = document.createElement('div');
+                        resultItem.innerHTML = `
+                            <div class="flex w-full gap-1.5 desktop:gap-3">
+                              <div class="flex w-[100px] laptop:w-[62px] desktop:w-[80px] large-desktop:w-[90px] h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] p-1.5 bg-white rounded-[10px]">
+                                <img src="../${product.icon_url.replace('application/', '')}" alt="" class="w-full m-auto rounded-[10px]">
+                              </div>
+                              <div class="relative laptop:flex flex-1 h-[90px] laptop:h-[55px] desktop:h-[70px] large-desktop:h-[80px] px-2.5 desktop:px-3 py-1 laptop:py-0.5 desktop:py-2 bg-white rounded-[10px]">
+                                <div class="flex flex-col h-full text-left">
+                                  <div class="text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Bold] tracking-[0.07rem]">${product.name}</div>
+                                  <div class="w-[220px] laptop:w-[170px] desktop:w-[220px] mt-0 laptop:-mt-1 desktop:mt-auto text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px] font-[Jost-Medium] tracking-[0.02rem] leading-[0.9rem] desktop:leading-[1.1rem] opacity-30">${product.description}</div>
+                                </div>
+                                <div class="flex laptop:flex-col w-full laptop:w-auto laptop:h-full ml-auto -mt-[25px] laptop:-mt-0 font-[Jost-Medium] tracking-[0.07rem]">
+                                  <div class="flex text-[16px] laptop:text-[15px] desktop:text-[16px] large-desktop:text-[17px]">
+                                    <div class="mr-4">${product.price} ₽/шт</div>
+                                    <button data-id="${product.id}" @click="infoPanel = true, searchTab = false" class="group hidden laptop:flex flex-col w-min whitespace-nowrap hover:opacity-50 opacity-30 transition-all ease-in-out duration-200 info-btn" style="cursor: pointer;">
+                                      <div>info</div>
+                                      <div class="w-full h-[1.5px] -mt-[5px] bg-black"></div>
+                                    </button>
+                                  </div>
+                                  <button data-id="${product.id}" data-category="${category}" data-company="${company}" class="block ml-auto -mt-0.5 laptop:mt-auto text-[18px] laptop:text-[16px] desktop:text-[18px] large-desktop:text-[20px] hover:opacity-70 transition-all ease-in-out duration-200 add-to-cart" style="cursor: pointer;">добавить</button>
+                                </div>
+                                <button data-id="${product.id}" @click="infoPanel = true, searchTab = false" class="group flex laptop:hidden absolute right-0 top-0 mr-[10px] mt-2 w-[22px] h-[22px] rounded-full bg-black hover:bg-white border-[2px] border-black transition-all ease-in-out duration-200 info-btn" style="cursor: pointer;">
+                                  <div class="w-min h-min m-auto -mt-0.5 text-white group-hover:text-black font-[Jost-Bold]">i</div>
+                                </button>
+                              </div>
+                            </div>
+                        `;
+                        searchResults.appendChild(resultItem);
+                    });
+                } else {
+                    searchResults.innerHTML = '<div class="text-red-500">Товар не найден</div>';
+                }
+            });
+    });
+  </script>
+
+  <script>
+    function updateScrollbarClass() {
+        if (window.innerWidth < 1440) { // Условие для мобильных устройств
+          document.getElementById("searchTab-id").classList.remove('custom-scroll-scrollbar-1');
+          document.getElementById("searchTab-id").classList.add('custom-scroll-scrollbar-2');
+          document.getElementById("targetCompany-id").classList.remove('custom-scroll-scrollbar-1');
+          document.getElementById("targetCompany-id").classList.add('custom-scroll-scrollbar-2');
+        } else { // Условие для десктопных устройств
+          document.getElementById("searchTab-id").classList.remove('custom-scroll-scrollbar-2');
+          document.getElementById("searchTab-id").classList.add('custom-scroll-scrollbar-1');
+          document.getElementById("targetCompany-id").classList.remove('custom-scroll-scrollbar-2');
+          document.getElementById("targetCompany-id").classList.add('custom-scroll-scrollbar-1');
+        }
+    }
+
+    // Вызываем функцию при загрузке страницы
+    updateScrollbarClass();
+    
+    // Добавляем обработчик события для изменения размера окна
+    window.addEventListener('resize', updateScrollbarClass);
+  </script>
+  <script>
+    function changeInputValues(rangeID, valueID){
+      // Получаем элементы input
+      const rangeInput = document.getElementById(rangeID);
+      const numberInput = document.getElementById(valueID);
+
+      // Функция для обновления значения number при изменении range
+      rangeInput.addEventListener('input', function() {
+          numberInput.value = parseFloat(rangeInput.value).toFixed(2);
+      });
+
+      // Функция для обновления значения range при изменении number
+      numberInput.addEventListener('input', function() {
+          rangeInput.value = parseFloat(numberInput.value).toFixed(2);
+      });
+    }
+
+    changeInputValues('wall-width-range', 'wall-width-value');
+    changeInputValues('wall-height-range', 'wall-height-value');
+  </script>
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('transitions', () => ({
+        opacityTransition: {
+          ["x-transition:enter"]() {
+            return "ransition-opacity duration-500";
+          },
+          ["x-transition:enter-start"]() {
+            return "opacity-0";
+          },
+          ["x-transition:enter-end"]() {
+            return "opacity-100";
+          },
+          ["x-transition:leave"]() {
+            return "transition-opacity duration-500";
+          },
+          ["x-transition:leave-start"]() {
+            return "opacity-100 hidden";
+          },
+          ["x-transition:leave-end"]() {
+            return "opacity-0 hidden";
+          },
+        },
+      }))
+    })
+  </script>
+</body>
+</html>

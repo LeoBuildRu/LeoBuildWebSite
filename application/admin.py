@@ -9,6 +9,7 @@ class ImagesTublerInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ImagesTublerInline]
 
+admin.site.register(Model_Class)
 admin.site.register(Company_Furniture)
 admin.site.register(Furniture_Categorie)
 admin.site.register(Product_Item, ProductAdmin)
