@@ -32,12 +32,20 @@ sessions.json
 *.dump
 *.bak
 
-## Тяжёлые бинарники 3D-моделей (по желанию — если раздуют репу)
-# application/static/models/Blender/
-# *.blend
-# *.blend1
-# *.3ds
-# *.fbx
+## Тяжёлые 3D-модели и текстуры — не хранить в git (в glb 1.7 ГБ, есть файлы >100 МБ)
+application/static/models/glb/
+application/static/models/Blender/
+application/static/js/valid/
+application/static/js/non valid/
+*.blend
+*.blend1
+*.3ds
+*.fbx
+*.dae
+*.max
+*.obj
+# крупные экспортированные сцены
+application/static/models/**/*.glb
 
 ## Секреты
 .env
