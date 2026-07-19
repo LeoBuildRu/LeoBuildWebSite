@@ -1,0 +1,59 @@
+## Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.pyo
+*.pyd
+
+## Virtual env (НЕ заливать на сервер — у него своя)
+venv/
+.venv/
+env/
+ENV/
+
+## Node / JS зависимости фронта
+node_modules/
+application/static/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Django runtime artifacts
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+application/media/
+media/
+
+## Датасет и локальные дампы (только на твоей машине)
+dataset/
+sessions.json
+*.dump
+*.bak
+
+## Тяжёлые бинарники 3D-моделей (по желанию — если раздуют репу)
+# application/static/models/Blender/
+# *.blend
+# *.blend1
+# *.3ds
+# *.fbx
+
+## Секреты
+.env
+.env.*
+!.env.example
+
+## IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Claude
+.claude/
