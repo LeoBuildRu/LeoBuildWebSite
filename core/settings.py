@@ -17,16 +17,39 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# ─── Prod/Dev toggles через env ──────────────────────────────────────
+# В dev'е env-переменных нет — берутся fallback'и (как раньше). На
+# проде systemd-юнит передаёт реальные значения, см. deploy-инструкцию.
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-v1a3ad6m*=&16k!v+215y_+iq-22w=3@xx5e+flhpsnz7*0&2&'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-v1a3ad6m*=&16k!v+215y_+iq-22w=3@xx5e+flhpsnz7*0&2&'
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+# Хосты через запятую: "leobuild.ru,www.leobuild.ru,147.45.154.147".
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+    if h.strip()
+]
+
+# Под HTTPS-формы (Django проверяет Origin header против Host'а).
+# Передавать со схемой: "https://leobuild.ru,https://www.leobuild.ru".
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if o.strip()
+]
+
+# Когда стоит nginx с TLS и проксирует на gunicorn по http — Django
+# должен верить заголовку X-Forwarded-Proto, иначе CSRF на POST-формах
+# будет ругаться, что Origin не https.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30 дней, после прогрева повысить
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 SESSION_COOKIE_AGE = 86400  # 24 часа
 
@@ -123,6 +146,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'application/static',  # Путь к вашим статическим файлам
 ]
+# Куда `collectstatic` соберёт ВСЁ для отдачи nginx'ом. В dev'е директория
+# не существует — Django читает напрямую из STATICFILES_DIRS, и это OK.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

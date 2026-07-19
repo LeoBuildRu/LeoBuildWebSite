@@ -1,0 +1,12 @@
+# Production runtime для LeoBuild.
+# В вашем dev-venv'е масса ML-пакетов (inference-sdk, torch, easyocr…) —
+# они на сервере НЕ нужны: вся CV-обработка плана делается в браузере
+# через OpenCV.js, а Roboflow вызывается по HTTP. Так что прод-набор
+# минимальный: Django + requests (для прокси на Roboflow) + gunicorn.
+
+Django==5.1.2
+requests==2.33.1
+gunicorn==23.0.0
+# Нужен для ImageField'ов в моделях Company_Furniture / Product_Item /
+# Product_Image / Model_Class. Без него Django ругается на E210 при migrate.
+Pillow==11.0.0

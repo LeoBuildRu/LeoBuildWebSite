@@ -1,0 +1,600 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <link href="{% static 'fonts/font.css' %}" rel="stylesheet">
+    <title>{% block title %}LeoBuild{% endblock %}</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg:              #070b12;
+            --panel-bg:        rgba(10, 14, 26, 0.84);
+            --panel-border:    rgba(255, 255, 255, 0.07);
+            --panel-glow:      rgba(79, 142, 255, 0.18);
+            --accent:          #4f8eff;
+            --accent-2:        #7c5cff;
+            --gradient:        linear-gradient(135deg, #4f8eff 0%, #7c5cff 100%);
+            --text-primary:    #eef2ff;
+            --text-secondary:  #5a6a8a;
+            --text-muted:      #2e3a52;
+            --success:         #00c896;
+            --warning:         #ff9040;
+            --danger:          #ff5d6e;
+            --blur:            22px;
+            --r-md:            18px;
+            --r-lg:            24px;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            /* Лёгкий «звёздный» фон-градиент, чтобы страница не казалась плоской. */
+            background-image:
+                radial-gradient(900px 600px at 15% 10%, rgba(79, 142, 255, 0.10), transparent 60%),
+                radial-gradient(700px 500px at 85% 90%, rgba(124, 92, 255, 0.08), transparent 55%);
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--r-lg);
+            padding: 32px;
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            box-shadow:
+                0 40px 80px rgba(0, 0, 0, 0.55),
+                0 0 0 1px var(--panel-border),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        .auth-card.wide { max-width: 560px; }
+        .auth-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .auth-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(79, 142, 255, 0.45);
+            flex-shrink: 0;
+        }
+        .auth-logo svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .auth-brand {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .auth-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+        .auth-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 22px;
+        }
+
+        .auth-error {
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            background: rgba(255, 93, 110, 0.10);
+            border: 1px solid rgba(255, 93, 110, 0.30);
+            color: #ffc0c8;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .form-label {
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-secondary);
+        }
+        .form-input {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s, box-shadow 0.18s;
+        }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-input:focus {
+            border-color: rgba(79, 142, 255, 0.55);
+            background: rgba(79, 142, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(79, 142, 255, 0.12);
+        }
+
+        .auth-submit {
+            width: 100%;
+            padding: 13px 18px;
+            border: none;
+            border-radius: 14px;
+            background: var(--gradient);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+        .auth-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(79, 142, 255, 0.36);
+        }
+        .auth-submit:active { transform: translateY(0); }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 16px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--panel-border);
+        }
+
+        .auth-secondary {
+            /* flex-центровка вместо display: block — нужно, чтобы внутри
+               .profile-actions (display:flex; align-items:stretch) текст
+               ссылки оказался вертикально по центру растянутого бокса,
+               как у соседней кнопки <button>, а не прижимался к верху. */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+            padding: 11px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            text-decoration: none;
+        }
+        .auth-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.18);
+            text-decoration: none;
+        }
+
+        .auth-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 18px;
+            transition: color 0.15s;
+        }
+        .auth-back:hover {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .auth-back::before {
+            content: '←';
+            font-size: 14px;
+        }
+
+        /* ─── Profile page ───────────────────────────────────────── */
+        .profile-card { max-width: 560px; }
+        .profile-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            margin-bottom: 10px;
+        }
+        .profile-row-label {
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-secondary);
+            min-width: 100px;
+        }
+        .profile-row-value {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 800;
+            box-shadow: 0 10px 24px rgba(79, 142, 255, 0.45);
+            flex-shrink: 0;
+        }
+        .profile-head {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .profile-username {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .profile-email {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .profile-actions > * { flex: 1; }
+        .auth-submit.danger {
+            background: rgba(255, 93, 110, 0.15);
+            color: #ffc0c8;
+            box-shadow: none;
+            border: 1px solid rgba(255, 93, 110, 0.35);
+        }
+        .auth-submit.danger:hover {
+            background: rgba(255, 93, 110, 0.28);
+            box-shadow: 0 8px 18px rgba(255, 93, 110, 0.22);
+        }
+
+        /* ─── Saved-scenes список на странице профиля ────────────
+           Выделено в классы, чтобы можно было адаптивно сжимать
+           строки на мобильных (см. media-queries ниже). Раньше
+           всё было в inline-стилях прямо в profile.html — это
+           блокировало responsive-правки. */
+        .saved-scenes-section { margin-top: 18px; }
+        .saved-scenes-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        .saved-scenes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .saved-scene-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+        }
+        .saved-scene-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .saved-scene-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .saved-scene-meta {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .saved-scene-actions {
+            /* align-items: stretch — все три бокса (a, button, form)
+               получают одну высоту. Это и решает разницу высот, которую
+               раньше создавала <form>-обёртка с собственным padding. */
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        /* Форма-обёртка для «Удалить» (CSRF требует POST). padding:0
+           + display:flex — чтобы внутренний button заполнил всю форму
+           по ширине и высоте, а не торчал выше братьев. */
+        .saved-scene-actions form {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: stretch;
+        }
+        .saved-scene-actions form > .saved-scene-btn {
+            width: 100%;
+            flex: 1;
+        }
+        .saved-scene-btn {
+            border: 1px solid var(--panel-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.13s, border-color 0.13s, color 0.13s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .saved-scene-btn:hover {
+            background: rgba(79, 142, 255, 0.12);
+            border-color: rgba(79, 142, 255, 0.35);
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .saved-scene-btn.share {
+            border-color: rgba(79, 142, 255, 0.35);
+            background: rgba(79, 142, 255, 0.10);
+            color: #88b3ff;
+        }
+        .saved-scene-btn.share:hover {
+            background: rgba(79, 142, 255, 0.22);
+            color: #c0d6ff;
+        }
+        .saved-scene-btn.delete {
+            border-color: rgba(255, 93, 110, 0.35);
+            background: rgba(255, 93, 110, 0.10);
+            color: #ffc0c8;
+        }
+        .saved-scene-btn.delete:hover {
+            background: rgba(255, 93, 110, 0.22);
+            border-color: rgba(255, 93, 110, 0.55);
+            color: #ffd2d2;
+        }
+        .saved-scenes-empty {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            padding: 8px 0;
+        }
+
+        /* ─── RESPONSIVE BREAKPOINTS ─────────────────────────────
+           Профильная и auth-карточки адаптируются под три класса
+           устройств:
+             • Desktop  (≥769px)   — текущая раскладка как есть
+             • Tablet   (561–768)  — компактнее, та же сетка
+             • Mobile   (≤560px)   — карточка во весь экран,
+                                     row становится column,
+                                     действия переезжают в нижний
+                                     ряд с равными колонками
+             • Tiny     (≤360px)   — миниатюрный паддинг,
+                                     profile-actions в столбик
+           Шрифты задаются вручную в px, без процентного scale. */
+
+        /* Tablet: 561–768px */
+        @media (max-width: 768px) {
+            body { padding: 18px; }
+
+            .auth-card { padding: 24px; }
+            .auth-card.wide,
+            .profile-card { max-width: 100%; }
+
+            .auth-head    { gap: 10px; margin-bottom: 20px; }
+            .auth-title   { font-size: 22px; }
+            .auth-subtitle{ font-size: 12.5px; margin-bottom: 18px; }
+
+            .profile-head { gap: 14px; margin-bottom: 18px; }
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            .profile-username { font-size: 19px; }
+            .profile-email    { font-size: 12.5px; }
+
+            .profile-row        { padding: 12px 14px; gap: 10px; }
+            .profile-row-label  { font-size: 10px; min-width: 86px; }
+            .profile-row-value  { font-size: 13.5px; }
+
+            .saved-scenes-title { font-size: 10.5px; }
+            .saved-scene-row    { padding: 11px 12px; gap: 10px; }
+            .saved-scene-name   { font-size: 13.5px; }
+            .saved-scene-meta   { font-size: 11px; }
+            .saved-scene-btn    { padding: 6px 10px; font-size: 11px; }
+        }
+
+        /* Mobile: ≤560px — карточка во весь экран, row → column.
+           Карточка теряет «островной» вид: убираем border-radius,
+           border и body-padding, чтобы фон карточки полз от края до
+           края экрана. На мобильном это естественнее: контент сразу
+           под топ-баром, без обрамляющей рамки и пустых полей. */
+        @media (max-width: 560px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+                min-height: 100vh;
+                min-height: 100dvh;
+                display: block;
+            }
+
+            .auth-card {
+                padding: 18px 16px;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+                border-top: none;
+                box-shadow: none;
+                max-width: 100%;
+                min-height: 100vh;
+                min-height: 100dvh;
+            }
+
+            .auth-head     { gap: 10px; margin-bottom: 18px; }
+            .auth-logo     { width: 32px; height: 32px; border-radius: 9px; }
+            .auth-logo svg { width: 17px; height: 17px; }
+            .auth-brand    { font-size: 11px; letter-spacing: 1.5px; }
+            .auth-title    { font-size: 19px; }
+            .auth-subtitle { font-size: 12px; margin-bottom: 16px; }
+
+            .profile-head     { gap: 12px; margin-bottom: 14px; }
+            .profile-avatar {
+                width: 52px;
+                height: 52px;
+                font-size: 20px;
+                box-shadow: 0 6px 16px rgba(79, 142, 255, 0.40);
+            }
+            .profile-username { font-size: 17px; }
+            .profile-email    { font-size: 12px; }
+
+            /* row → column: метка сверху, значение снизу */
+            .profile-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 3px;
+                padding: 10px 12px;
+                margin-bottom: 8px;
+            }
+            .profile-row-label  { min-width: 0; font-size: 9.5px; letter-spacing: 1px; }
+            .profile-row-value  { font-size: 13px; }
+
+            /* Saved scenes: имя сверху, кнопки переезжают на новую
+               строку и равномерно растягиваются по ширине. */
+            .saved-scene-row {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px 12px;
+            }
+            .saved-scene-info     { flex: 1 1 100%; }
+            .saved-scene-name     { font-size: 13px; }
+            .saved-scene-meta     { font-size: 10.5px; }
+            .saved-scene-actions { flex: 1 1 100%; gap: 6px; }
+            /* Только реальные кнопки (a/button) — не <form>. Иначе форма
+               добавила бы свой padding поверх внутреннего button'а,
+               и «Удалить» оказывался бы выше остальных. */
+            .saved-scene-actions > a.saved-scene-btn,
+            .saved-scene-actions > button.saved-scene-btn,
+            .saved-scene-actions form > .saved-scene-btn {
+                flex: 1 1 0;
+                width: 100%;
+                padding: 9px 6px;
+                font-size: 11px;
+            }
+            .saved-scene-actions > form { flex: 1 1 0; }
+
+            .profile-actions { gap: 8px; margin-top: 16px; }
+            .auth-submit     { padding: 12px 14px; font-size: 12.5px; letter-spacing: 0.8px; }
+            .auth-secondary  { padding: 11px 12px; font-size: 12.5px; }
+
+            /* Share-модалка узких устройств */
+            #profile-share-overlay { padding: 14px !important; }
+        }
+
+        /* Tiny: ≤360px — последний рубеж читаемости.
+           Карточка всё ещё плоская (без radius/border — из ≤560px),
+           только внутренний padding ужимаем под совсем узкий экран. */
+        @media (max-width: 360px) {
+            .auth-card {
+                padding: 14px 12px;
+            }
+            .auth-head     { gap: 9px; margin-bottom: 16px; }
+            .auth-logo     { width: 30px; height: 30px; }
+            .auth-logo svg { width: 16px; height: 16px; }
+            .auth-brand    { font-size: 10.5px; }
+            .auth-title    { font-size: 18px; }
+
+            .profile-avatar { width: 46px; height: 46px; font-size: 18px; }
+            .profile-username { font-size: 15.5px; }
+
+            .profile-row        { padding: 9px 11px; }
+            .profile-row-value  { font-size: 12.5px; }
+
+            .saved-scenes-title { font-size: 10px; }
+            .saved-scene-name   { font-size: 12.5px; }
+            .saved-scene-meta   { font-size: 10px; }
+            .saved-scene-actions > a.saved-scene-btn,
+            .saved-scene-actions > button.saved-scene-btn,
+            .saved-scene-actions form > .saved-scene-btn {
+                padding: 8px 5px;
+                font-size: 10.5px;
+            }
+
+            /* На совсем узких — действия страницы в столбик */
+            .profile-actions { flex-direction: column; gap: 6px; }
+            .auth-submit     { padding: 11px 12px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>

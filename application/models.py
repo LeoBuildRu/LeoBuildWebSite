@@ -1,7 +1,42 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 import uuid
 import random
+
+
+class SavedScene(models.Model):
+    """
+    Сохранённая сцена 3D-билдера. Привязана к пользователю; поле data
+    хранит JSON-снэпшот логического состояния сцены (стены, окна, двери,
+    размещённые предметы). Формат документирует версионируется через
+    data['version'] — старые саппорты не должны падать при добавлении полей.
+
+    share_token: непубличный по умолчанию (null). Генерируется лениво при
+    первом нажатии «Поделиться» — UUID, не последовательный, поэтому
+    enumerate-атак нет. Любой, у кого есть ссылка с токеном, может
+    открыть сцену через публичный эндпоинт; владелец остаётся
+    единственным, кто может её сохранять/удалять.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_scenes')
+    name = models.CharField(max_length=120, default='Без названия')
+    data = models.JSONField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    share_token = models.UUIDField(null=True, blank=True, unique=True, db_index=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.name} ({self.user.username})'
+
+    @property
+    def item_count(self):
+        try:
+            return len((self.data or {}).get('items', []) or [])
+        except Exception:
+            return 0
 
 # Create your models here.
     

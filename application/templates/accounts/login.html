@@ -1,0 +1,52 @@
+{% extends 'accounts/_base.html' %}
+
+{% block title %}Вход — LeoBuild{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-head">
+        <div class="auth-logo">
+            <svg viewBox="0 0 24 24">
+                <polyline points="22 12 12 17 2 12"/>
+                <polyline points="22 17 12 22 2 17"/>
+                <polyline points="22 7 12 12 2 7"/>
+            </svg>
+        </div>
+        <span class="auth-brand">LeoBuild</span>
+    </div>
+
+    <h1 class="auth-title">Вход в аккаунт</h1>
+    <p class="auth-subtitle">
+        Введите логин и пароль, чтобы продолжить работу со своими проектами.
+    </p>
+
+    {% if error %}
+    <div class="auth-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}{% if next %}?next={{ next }}{% endif %}" autocomplete="on">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div class="form-field">
+            <label class="form-label" for="id_username">Логин</label>
+            <input class="form-input" type="text" id="id_username" name="username"
+                   autocomplete="username" autofocus required>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="id_password">Пароль</label>
+            <input class="form-input" type="password" id="id_password" name="password"
+                   autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="auth-submit">Войти</button>
+    </form>
+
+    <div class="auth-divider">или</div>
+
+    <a href="{% url 'register' %}" class="auth-secondary">Создать новый аккаунт</a>
+
+    <a href="/builder/" class="auth-back">К билдеру без входа</a>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'accounts/_base.html' %}
+
+{% block title %}Регистрация — LeoBuild{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-head">
+        <div class="auth-logo">
+            <svg viewBox="0 0 24 24">
+                <polyline points="22 12 12 17 2 12"/>
+                <polyline points="22 17 12 22 2 17"/>
+                <polyline points="22 7 12 12 2 7"/>
+            </svg>
+        </div>
+        <span class="auth-brand">LeoBuild</span>
+    </div>
+
+    <h1 class="auth-title">Создать аккаунт</h1>
+    <p class="auth-subtitle">
+        Бесплатно. После регистрации сразу попадёте в свой профиль.
+    </p>
+
+    {% if error %}
+    <div class="auth-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'register' %}" autocomplete="on">
+        {% csrf_token %}
+
+        <div class="form-field">
+            <label class="form-label" for="id_username">Логин *</label>
+            <input class="form-input" type="text" id="id_username" name="username"
+                   value="{{ form.username }}"
+                   autocomplete="username" autofocus minlength="3" required>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="id_email">Email <span style="text-transform:none;font-size:11px;color:var(--text-muted);">(необязательно)</span></label>
+            <input class="form-input" type="email" id="id_email" name="email"
+                   value="{{ form.email }}"
+                   autocomplete="email">
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="id_password1">Пароль *</label>
+            <input class="form-input" type="password" id="id_password1" name="password1"
+                   autocomplete="new-password" minlength="6" required>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="id_password2">Пароль ещё раз *</label>
+            <input class="form-input" type="password" id="id_password2" name="password2"
+                   autocomplete="new-password" minlength="6" required>
+        </div>
+
+        <button type="submit" class="auth-submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="auth-divider">уже есть аккаунт?</div>
+
+    <a href="{% url 'login' %}" class="auth-secondary">Войти</a>
+
+    <a href="/builder/" class="auth-back">К билдеру без входа</a>
+</div>
+{% endblock %}

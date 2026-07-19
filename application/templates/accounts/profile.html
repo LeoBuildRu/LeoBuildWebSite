@@ -1,0 +1,204 @@
+{% extends 'accounts/_base.html' %}
+
+{% block title %}Профиль — LeoBuild{% endblock %}
+
+{% block content %}
+<div class="auth-card profile-card">
+    <div class="auth-head">
+        <div class="auth-logo">
+            <svg viewBox="0 0 24 24">
+                <polyline points="22 12 12 17 2 12"/>
+                <polyline points="22 17 12 22 2 17"/>
+                <polyline points="22 7 12 12 2 7"/>
+            </svg>
+        </div>
+        <span class="auth-brand">LeoBuild · профиль</span>
+    </div>
+
+    <div class="profile-head">
+        <div class="profile-avatar">
+            {{ profile_user.username|slice:":1"|upper }}
+        </div>
+        <div>
+            <div class="profile-username">{{ profile_user.username }}</div>
+            {% if profile_user.email %}
+            <div class="profile-email">{{ profile_user.email }}</div>
+            {% else %}
+            <div class="profile-email">email не указан</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-row">
+        <span class="profile-row-label">Логин</span>
+        <span class="profile-row-value">{{ profile_user.username }}</span>
+    </div>
+
+    <div class="profile-row">
+        <span class="profile-row-label">Email</span>
+        <span class="profile-row-value">{{ profile_user.email|default:"—" }}</span>
+    </div>
+
+    <div class="profile-row">
+        <span class="profile-row-label">Дата регистрации</span>
+        <span class="profile-row-value">{{ profile_user.date_joined|date:"d.m.Y H:i" }}</span>
+    </div>
+
+    <div class="profile-row">
+        <span class="profile-row-label">Последний вход</span>
+        <span class="profile-row-value">
+            {% if profile_user.last_login %}{{ profile_user.last_login|date:"d.m.Y H:i" }}{% else %}—{% endif %}
+        </span>
+    </div>
+
+    <div class="saved-scenes-section">
+        <div class="saved-scenes-title">
+            Сохранённые сцены ({{ saved_scenes|length }})
+        </div>
+        {% if saved_scenes %}
+        <div class="saved-scenes-list">
+            {% for sc in saved_scenes %}
+            <div class="saved-scene-row">
+                <div class="saved-scene-info">
+                    <div class="saved-scene-name">{{ sc.name }}</div>
+                    <div class="saved-scene-meta">
+                        {{ sc.item_count }} предм. · {{ sc.updated_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+                <div class="saved-scene-actions">
+                    <a href="/builder/" class="saved-scene-btn"
+                       title="Откройте билдер и нажмите иконку «загрузить»">К билдеру</a>
+                    <button type="button" class="saved-scene-btn share js-share-btn"
+                            data-scene-id="{{ sc.id }}" data-scene-name="{{ sc.name|escapejs }}"
+                            title="Получить ссылку для просмотра проекта">Поделиться</button>
+                    <form method="post" action="{% url 'scenes_delete_form' sc.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="saved-scene-btn delete"
+                                onclick="return confirm('Удалить «{{ sc.name }}»?');">
+                            Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="saved-scenes-empty">
+            Пока нет сохранённых сцен. Откройте билдер, расставьте мебель и нажмите
+            иконку «Сохранить» в верхнем правом углу — снэпшот появится здесь.
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="profile-actions">
+        <a href="/builder/" class="auth-secondary">К билдеру</a>
+        <form method="post" action="{% url 'logout' %}" style="margin:0;display:flex;">
+            {% csrf_token %}
+            <button type="submit" class="auth-submit danger" style="margin:0;text-transform:none;font-size:13px;letter-spacing:0.4px;">
+                Выйти
+            </button>
+        </form>
+    </div>
+</div>
+
+{% comment %}
+    Мини-диалог «Поделиться» — общий для всех сцен в списке. Активная
+    сцена задаётся через JS на основе data-scene-id у кликнутой кнопки.
+{% endcomment %}
+<div id="profile-share-overlay"
+     style="position:fixed;inset:0;background:rgba(4,6,14,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:1500;display:none;align-items:center;justify-content:center;padding:24px;">
+    <div role="document"
+         style="position:relative;width:min(440px,100%);background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:24px;box-shadow:0 48px 96px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid var(--panel-border);">
+            <span style="font-size:16px;font-weight:700;color:var(--text-primary);flex:1;">Поделиться сценой</span>
+            <button type="button" id="profile-share-close"
+                    style="width:32px;height:32px;border-radius:10px;border:1px solid var(--panel-border);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-size:18px;line-height:1;cursor:pointer;font-family:inherit;">×</button>
+        </div>
+        <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+            <p style="font-size:13px;line-height:1.5;color:var(--text-secondary);margin:0;">
+                Ссылка на проект <strong id="profile-share-name" style="color:var(--text-primary);">—</strong>:
+            </p>
+            <div style="display:flex;gap:6px;align-items:stretch;">
+                <input id="profile-share-url" type="text" readonly
+                       style="flex:1;min-width:0;padding:11px 14px;border-radius:12px;border:1px solid var(--panel-border);background:rgba(255,255,255,0.04);color:var(--text-primary);font-family:inherit;font-size:13px;outline:none;">
+                <button type="button" id="profile-share-copy"
+                        style="flex-shrink:0;padding:11px 16px;border-radius:18px;border:none;background:linear-gradient(135deg,#4f8eff 0%,#7c5cff 100%);color:#fff;font-size:13px;font-weight:700;letter-spacing:0.6px;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(79, 142, 255, 0.30);">Скопировать</button>
+            </div>
+            <p id="profile-share-status"
+               style="font-size:12px;color:var(--text-secondary);min-height:16px;line-height:1.4;margin:0;">
+                Любой с этой ссылкой сможет открыть 3D-планировку. Изменения у гостя не сохранятся — для собственных правок ему нужно войти и сохранить свою копию.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const overlay = document.getElementById('profile-share-overlay');
+    const closeBtn = document.getElementById('profile-share-close');
+    const urlInput = document.getElementById('profile-share-url');
+    const nameSpan = document.getElementById('profile-share-name');
+    const copyBtn = document.getElementById('profile-share-copy');
+    const statusEl = document.getElementById('profile-share-status');
+
+    function getCsrf() {
+        const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+
+    function open() { overlay.style.display = 'flex'; }
+    function close() { overlay.style.display = 'none'; }
+
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && overlay.style.display === 'flex') close();
+    });
+
+    document.querySelectorAll('.js-share-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const sceneId = btn.dataset.sceneId;
+            const sceneName = btn.dataset.sceneName || '—';
+            nameSpan.textContent = sceneName;
+            urlInput.value = '';
+            statusEl.textContent = 'Получение ссылки…';
+            statusEl.style.color = 'var(--text-secondary)';
+            open();
+            try {
+                const r = await fetch(`/api/scenes/${sceneId}/share/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrf() },
+                });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const j = await r.json();
+                urlInput.value = j.url;
+                statusEl.textContent = 'Любой с этой ссылкой сможет открыть 3D-планировку. Изменения у гостя не сохранятся.';
+                statusEl.style.color = 'var(--text-secondary)';
+                setTimeout(() => { urlInput.focus(); urlInput.select(); }, 50);
+            } catch (e) {
+                statusEl.textContent = 'Не удалось получить ссылку: ' + (e.message || e);
+                statusEl.style.color = '#ffc0c8';
+            }
+        });
+    });
+
+    copyBtn.addEventListener('click', async function () {
+        const url = urlInput.value;
+        if (!url) return;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(url);
+            } else {
+                urlInput.select();
+                document.execCommand('copy');
+            }
+            statusEl.textContent = '✓ Ссылка скопирована в буфер обмена';
+            statusEl.style.color = 'var(--success)';
+        } catch (e) {
+            statusEl.textContent = 'Не удалось скопировать — выделите и нажмите Ctrl+C';
+            statusEl.style.color = '#ffc0c8';
+        }
+    });
+})();
+</script>
+{% endblock %}
