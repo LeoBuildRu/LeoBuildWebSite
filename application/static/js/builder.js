@@ -1,4 +1,6 @@
 ﻿// --------------------- РРќРР¦РРђР›РР—РђР¦РРЇ ---------------------
+import { detectPlanObjects, OPENING_CLASSES, SERVICE_CLASSES, PLAN_CLASS_RU } from './modules/PlanDetector.js';
+
 BABYLON.SceneLoader.ShowLoadingScreen = false;
 
 // Draco-decoder for compressed .opt.glb models (gltf-transform draco).
@@ -395,6 +397,10 @@ let detectedDoors   = [];
 let detectedDoorArches = [];
 let detectedDoorProfiles = [];
 let detectedWindowProfiles = [];
+// Мебель/сантехника с чертежа (локальная модель, modules/PlanDetector.js).
+// После «Построить 3D» предметы с аналогом в каталоге расставляются один раз.
+let detectedFurniture = [];
+let furnitureNeedsPlacement = false;
 
 // DOM
 const selectImageBtn  = document.getElementById('select-image-btn');
@@ -410,6 +416,7 @@ const previewCancel   = document.getElementById('preview-cancel');
 const previewConfirm  = document.getElementById('preview-confirm');
 const detectWindowsBtn = document.getElementById('detect-windows-btn');
 const detectDoorsBtn  = document.getElementById('detect-doors-btn');
+const detectFurnitureBtn = document.getElementById('detect-furniture-btn');
 const detectStatus    = document.getElementById('detect-status');
 const loadingIndicator = document.getElementById('loading-indicator');
 const overlayCanvas   = document.getElementById('windows-overlay-canvas');
@@ -745,6 +752,7 @@ function enterDetectionsPreviewMode() {
     previewConfirm.textContent = 'Показать сращивание';
     detectWindowsBtn.style.display = '';
     if (detectDoorsBtn) detectDoorsBtn.style.display = '';
+    if (detectFurnitureBtn) detectFurnitureBtn.style.display = '';
     overlayCanvas.style.display = '';
     if (currentPlanObjectUrl && previewImage.src !== currentPlanObjectUrl) {
         previewImage.src = currentPlanObjectUrl;
@@ -763,6 +771,7 @@ function enterStitchPreviewMode(maskPreviewDataUrl, wallRegions) {
     previewConfirm.textContent = 'Построить 3D';
     detectWindowsBtn.style.display = 'none';
     if (detectDoorsBtn) detectDoorsBtn.style.display = 'none';
+    if (detectFurnitureBtn) detectFurnitureBtn.style.display = 'none';
 
     overlayCanvas.style.display = '';
     clearOverlayCanvas();
@@ -888,6 +897,8 @@ fileInput.addEventListener('change', (e) => {
         detectedDoorArches = [];
         detectedDoorProfiles = [];
         detectedWindowProfiles = [];
+        detectedFurniture = [];
+        furnitureNeedsPlacement = false;
         clearWindowMarkers();
         clearDoorMarkers();
         clearFloorsAndCeilings();
@@ -1081,7 +1092,12 @@ async function requestDetections() {
 }
 
 function updateDetectionStatus() {
-    detectStatus.textContent = `Найдено окон: ${detectedWindows.length}, door box: ${detectedDoors.length}, door arch: ${detectedDoorArches.length}`;
+    let text = `Найдено окон: ${detectedWindows.length}, door box: ${detectedDoors.length}, door arch: ${detectedDoorArches.length}`;
+    if (detectedFurniture.length) {
+        const placeable = detectedFurniture.filter(f => pickCatalogItemForFurniture(f)).length;
+        text += `, мебель: ${detectedFurniture.length} (в 3D из каталога: ${placeable})`;
+    }
+    detectStatus.textContent = text;
 }
 
 detectWindowsBtn.addEventListener('click', async () => {
@@ -1150,6 +1166,31 @@ if (detectDoorsBtn) {
     });
 }
 
+// Мебель ищет локальная модель прямо в браузере (без Roboflow). Окна/двери
+// она тоже видит, но их по-прежнему дают кнопки выше — здесь берём только мебель.
+if (detectFurnitureBtn) {
+    detectFurnitureBtn.addEventListener('click', async () => {
+        if (!currentPlanImage) { detectStatus.textContent = 'Нет файла изображения'; return; }
+        detectStatus.textContent = 'Поиск мебели... (первый запуск загружает модель)';
+        [detectFurnitureBtn, detectWindowsBtn, detectDoorsBtn].forEach(b => { if (b) b.disabled = true; });
+
+        try {
+            const t0 = performance.now();
+            const predictions = await detectPlanObjects(currentPlanImage);
+            detectedFurniture = predictions.filter(p => !OPENING_CLASSES.has(p.cls) && !SERVICE_CLASSES.has(p.cls));
+            furnitureNeedsPlacement = detectedFurniture.length > 0;
+            console.log(`🛋 Мебель на чертеже: ${detectedFurniture.length} за ${Math.round(performance.now() - t0)} мс`, detectedFurniture);
+            drawWindowsOverlay();
+            updateDetectionStatus();
+        } catch (error) {
+            console.error('Ошибка детекции мебели:', error);
+            detectStatus.textContent = `Ошибка: ${error.message}`;
+        } finally {
+            [detectFurnitureBtn, detectWindowsBtn, detectDoorsBtn].forEach(b => { if (b) b.disabled = false; });
+        }
+    });
+}
+
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1208,9 +1249,38 @@ function formatOpeningLabel(boxPx, heightM) {
     return `${spanM.toFixed(2)} × ${heightM.toFixed(2)} м`;
 }
 
+// Мебель — под проёмами: тонкая фиолетовая рамка и подпись класса,
+// если рамка на экране достаточно крупная, чтобы подпись не мешала.
+function drawFurnitureOnOverlay(ctx, sx, sy) {
+    if (!detectedFurniture.length) return;
+    ctx.save();
+    ctx.lineWidth   = 1.5;
+    ctx.strokeStyle = '#b48cff';
+    ctx.fillStyle   = 'rgba(180,140,255,0.10)';
+    detectedFurniture.forEach(f => {
+        ctx.fillRect  (f.x * sx, f.y * sy, f.w * sx, f.h * sy);
+        ctx.strokeRect(f.x * sx, f.y * sy, f.w * sx, f.h * sy);
+    });
+    ctx.font = 'bold 10px "Inter", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    detectedFurniture.forEach(f => {
+        if (f.w * sx < 26 || f.h * sy < 14) return;
+        const text = PLAN_CLASS_RU[f.cls] || f.cls;
+        const tw = ctx.measureText(text).width + 6;
+        ctx.fillStyle = 'rgba(30, 16, 56, 0.85)';
+        ctx.fillRect(f.x * sx, f.y * sy, tw, 13);
+        ctx.fillStyle = '#e6d9ff';
+        ctx.fillText(text, f.x * sx + 3, f.y * sy + 1.5);
+    });
+    ctx.restore();
+}
+
 function drawDetectionsOnOverlay(ctx, sx, sy) {
     const windowOpeningHeight = getWindowCutGeometry().openingHeight;
     const doorOpeningHeight = getDoorCutGeometry().openingHeight;
+
+    drawFurnitureOnOverlay(ctx, sx, sy);
 
     ctx.strokeStyle = '#00ff88';
     ctx.lineWidth   = 2;
@@ -1272,7 +1342,7 @@ function drawWindowsOverlay() {
 
     const ctx = overlayCanvas.getContext('2d');
     ctx.clearRect(0, 0, w, h);
-    if (!detectedWindows.length && !detectedDoors.length) return;
+    if (!detectedWindows.length && !detectedDoors.length && !detectedFurniture.length) return;
 
     const sx = w / previewImage.naturalWidth;
     const sy = h / previewImage.naturalHeight;
@@ -1542,6 +1612,9 @@ function buildWallsFromRegions(wallRegions) {
 
     // Размерные лейблы (только площадь комнаты, лежат на полу, видны в 2D).
     buildDimensionLabelsFor(wallRegions, openingBlueprints);
+
+    // Мебель с чертежа — после стен: ориентация берётся по wallFacePlanes.
+    if (furnitureNeedsPlacement) placeDetectedFurniture();
 
     console.log(`✅ Создано стен: ${createdWalls.length}, окон: ${detectedWindows.length}, дверей: ${detectedDoors.length}`);
     if (createdWalls.length > 0) adjustCameraToWalls();
@@ -5755,6 +5828,109 @@ function trySnapFloorItemToWall(handle) {
     return true;
 }
 
+// --- Расстановка мебели, найденной на чертеже ----------------------------
+// Класс детектора → категория каталога (slug товара = `<категория>-<имя>`,
+// см. builder_page во views.py). Остальные классы (стулья, сантехника, …)
+// пока без 3D-аналога в каталоге — только подсвечиваются на превью.
+const FURNITURE_CATALOG = {
+    sofa:         'sofas',
+    bed:          'beds',
+    wardrobe:     'wardrobe',
+    nightstand:   'curbstones',
+    tv_stand:     'curbstones',
+    table:        'tables',
+    desk:         'tables',
+    bathtub:      'bath',
+    kitchen_unit: 'kitchen'
+};
+const FURNITURE_WALL_GAP = 0.35; // м, рамка дальше от стены — ставим «как на чертеже», без прилипания
+
+// Модель из категории с самым близким к рамке габаритом в плане (по GLB_REAL_DIMS).
+function pickCatalogItemForFurniture(det) {
+    const category = FURNITURE_CATALOG[det.cls];
+    if (!category) return null;
+    const long = Math.max(det.w, det.h) * MANUAL_SCALE;
+    const short = Math.min(det.w, det.h) * MANUAL_SCALE;
+    let best = null, bestScore = Infinity;
+    document.querySelectorAll(`.add-catalog-item[data-slug^="${category}-"]`).forEach(btn => {
+        if ((btn.dataset.mount || 'floor') !== 'floor' || !btn.dataset.glb) return;
+        const dims = GLB_REAL_DIMS[btn.dataset.label];
+        const score = dims
+            ? Math.abs(Math.max(dims.width, dims.depth) - long) + Math.abs(Math.min(dims.width, dims.depth) - short)
+            : 1e6;
+        if (score < bestScore) {
+            bestScore = score;
+            best = { url: btn.dataset.glb, label: btn.dataset.label, slug: btn.dataset.slug };
+        }
+    });
+    return best;
+}
+
+// Длинная сторона модели ложится вдоль длинной стороны рамки, «лицо» (локальная +Z,
+// как в trySnapFloorItemToWall) — от ближайшей стены за спиной. Если такая стена
+// рядом, прижимаем спинку к ней; иначе ставим в центр рамки.
+function orientFurnitureByDetection(handle, det) {
+    const size = handle.metadata.size;
+    const detW = det.w * MANUAL_SCALE, detH = det.h * MANUAL_SCALE;
+    const cx = (det.x + det.w / 2) * MANUAL_SCALE, cz = (det.y + det.h / 2) * MANUAL_SCALE;
+    const squareish = Math.max(detW, detH) / Math.max(1e-6, Math.min(detW, detH)) < 1.25;
+    const facingAlongX = (size.z > size.x) === (detW >= detH);
+    const dirs = squareish ? [[1, 0], [-1, 0], [0, 1], [0, -1]]
+        : facingAlongX ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]];
+
+    let best = null;
+    for (const [nx, nz] of dirs) {
+        const ext = (nx !== 0 ? detW : detH) / 2;
+        const backX = cx - nx * ext, backZ = cz - nz * ext;
+        for (const plane of wallFacePlanes) {
+            if (plane.normal.x * nx + plane.normal.z * nz < 0.95) continue;
+            const gap = (backX - plane.point.x) * plane.normal.x + (backZ - plane.point.z) * plane.normal.z;
+            if (gap < -0.15 || gap > FURNITURE_WALL_GAP) continue;
+            const t = (cx - plane.point.x) * plane.tangent.x + (cz - plane.point.z) * plane.tangent.z;
+            if (t < plane.minT - 0.05 || t > plane.maxT + 0.05) continue;
+            if (!best || Math.abs(gap) < Math.abs(best.gap)) best = { nx, nz, plane, gap, t };
+        }
+    }
+
+    const [nx, nz] = best ? [best.nx, best.nz] : dirs[0];
+    handle.rotation.y = Math.atan2(nx, nz);
+    if (best) {
+        const p = best.plane;
+        handle.position.x = p.point.x + p.tangent.x * best.t + p.normal.x * size.z / 2;
+        handle.position.z = p.point.z + p.tangent.z * best.t + p.normal.z * size.z / 2;
+        handle.metadata.snapped = true;
+        handle.metadata.snappedNormal = { x: p.normal.x, z: p.normal.z };
+    } else {
+        handle.position.x = cx;
+        handle.position.z = cz;
+    }
+}
+
+function placeDetectedFurniture() {
+    furnitureNeedsPlacement = false;
+    const jobs = detectedFurniture
+        .map(det => ({ det, item: pickCatalogItemForFurniture(det) }))
+        .filter(j => j.item);
+    const skipped = detectedFurniture.length - jobs.length;
+    jobs.forEach(({ det, item }) => {
+        loadGlbAndAddToScene({
+            url: item.url,
+            label: item.label,
+            slug: item.slug,
+            mount: 'floor',
+            initialPosition: new BABYLON.Vector3((det.x + det.w / 2) * MANUAL_SCALE, 0, (det.y + det.h / 2) * MANUAL_SCALE),
+            _silent: true,
+            onPlaced: handle => orientFurnitureByDetection(handle, det)
+        });
+    });
+    console.log(`🛋 Расставляю мебель с чертежа: ${jobs.length}, без аналога в каталоге: ${skipped}`);
+    if (typeof window.uiToast === 'function') {
+        window.uiToast(jobs.length
+            ? `Расставляю мебель с чертежа: ${jobs.length} шт.` + (skipped ? ` (${skipped} без аналога в каталоге)` : '')
+            : 'Для найденной мебели нет моделей в каталоге', { type: 'success', duration: 3500 });
+    }
+}
+
 function findScenePlacementPoint() {
     // Центр первой комнаты — самое разумное место «по умолчанию».
     if (Array.isArray(pendingWallRegions)) {
@@ -6251,6 +6427,8 @@ function clearScene() {
     detectedDoorArches = [];
     detectedWindowProfiles = [];
     detectedDoorProfiles = [];
+    detectedFurniture = [];
+    furnitureNeedsPlacement = false;
     lastBuiltWallRegions = null;
 
     // 5. Сбрасываем UI билд-кнопки и превью.

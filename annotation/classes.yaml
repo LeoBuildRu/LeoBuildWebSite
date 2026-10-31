@@ -1,0 +1,36 @@
+# Классы для экспорта разметки в YOLO. Правила — annotation/RULES.md.
+# Имена window, window-block, door box, door arch читает application/static/js/builder.js — не переименовывать.
+# Служебный класс unknown размечается, но в экспорт не входит.
+names:
+  0: window
+  1: window-block
+  2: door box
+  3: door arch
+  4: sofa
+  5: armchair
+  6: bed
+  7: nightstand
+  8: chair
+  9: table
+  10: coffee_table
+  11: desk
+  12: wardrobe
+  13: cabinet
+  14: tv_stand
+  15: tv
+  16: bench
+  17: rug
+  18: curtain
+  19: plant
+  20: kitchen_unit
+  21: stove
+  22: oven
+  23: dishwasher
+  24: kitchen_sink
+  25: fridge
+  26: bathtub
+  27: shower
+  28: toilet
+  29: sink
+  30: washing_machine
+  31: shaft

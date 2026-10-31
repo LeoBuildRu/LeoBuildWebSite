@@ -28,6 +28,10 @@ media/
 
 ## Датасет и локальные дампы (только на твоей машине)
 dataset/
+# Экспорт разметки в YOLO, прогоны обучения и скачанные веса (ml/export_yolo.py, ml/train.py)
+ml/data/
+ml/runs/
+ml/*.pt
 sessions.json
 *.dump
 *.bak

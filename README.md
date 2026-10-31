@@ -199,6 +199,22 @@ python parse_dataset.py <полный-url>
 
 ### `optimize_models.ps1` — прогон 3D-моделей через оптимизатор (снижение веса `.glb`).
 
+### `ml/` — детектор мебели на чертеже
+YOLO-модель, обученная на разметке `dataset/<ЖК>/*.labels.json` (32 класса из `annotation/classes.yaml`: мебель, сантехника, окна, двери, вентшахты). В builder она работает **в браузере** через onnxruntime-web (`application/static/js/modules/PlanDetector.js`), сервер её не запускает: кнопка «Найти мебель» в предпросмотре плана подсвечивает предметы, а после «Построить 3D» предметы, для которых есть модель в каталоге, расставляются по местам с чертежа.
+
+Веса для сайта — `application/static/models/plan-detector/plan-detector.onnx` + `model.json` (классы, размер входа, метрики). Переобучить после новой разметки (нужна NVIDIA GPU, отдельное окружение — в прод-набор не входит):
+```powershell
+py -3.12 -m venv ml\.venv
+ml\.venv\Scripts\pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+ml\.venv\Scripts\pip install ultralytics onnx onnxslim onnxruntime
+
+ml\.venv\Scripts\python ml\export_yolo.py              # валидация на незнакомом ЖК 56842
+ml\.venv\Scripts\python ml\train.py --name holdout     # честная оценка качества
+ml\.venv\Scripts\python ml\export_yolo.py --all
+ml\.venv\Scripts\python ml\train.py --name final       # модель на всех ЖК
+ml\.venv\Scripts\python ml\export_web.py               # → application/static/models/plan-detector/
+```
+
 ---
 
 ## Деплой (prod)
